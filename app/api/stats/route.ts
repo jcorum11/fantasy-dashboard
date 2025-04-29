@@ -7,32 +7,37 @@ import {
 } from "@/lib/db";
 import { format, subDays } from "date-fns";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     console.error("=== API Route Start ===");
+
+    // Get date from query parameter or default to yesterday
+    const url = new URL(request.url);
+    const dateParam = url.searchParams.get("date");
+    const today = new Date();
+    const targetDate = dateParam
+      ? format(new Date(dateParam), "yyyy-MM-dd")
+      : format(subDays(today, 1), "yyyy-MM-dd");
+
+    console.error("Date to fetch:", targetDate);
 
     // Ensure tables exist
     console.error("Creating/verifying tables...");
     await createTables();
 
-    // Get yesterday's date
-    const today = new Date();
-    const yesterday = format(subDays(today, 1), "yyyy-MM-dd");
-    console.error("Date to fetch:", yesterday);
-
     // First try to get stored stats
     console.error("Checking database for stored stats...");
-    const storedStats = await getStoredStats(yesterday);
+    const storedStats = await getStoredStats(targetDate);
     console.error("Stored stats found:", storedStats.length);
 
     if (storedStats.length > 0) {
       console.error("Returning stored stats");
-      return NextResponse.json({ stats: storedStats });
+      return NextResponse.json({ stats: storedStats, date: targetDate });
     }
 
     // If no stored stats, fetch from MLB API
     console.error("No stored stats found, fetching from MLB API...");
-    const stats = await getPlayerStatsByDate(yesterday);
+    const stats = await getPlayerStatsByDate(targetDate);
     console.error("MLB API stats retrieved:", stats.length);
 
     // Store each player's stats
@@ -47,7 +52,7 @@ export async function GET() {
     }
 
     console.error("=== API Route End ===");
-    return NextResponse.json({ stats });
+    return NextResponse.json({ stats, date: targetDate });
   } catch (error) {
     console.error("=== API Route Error ===");
     console.error("Error details:", error);

@@ -35,12 +35,9 @@ neonConfig.fetchConnectionCache = true;
 
 // Create SQL client
 const sql = neon(process.env.DATABASE_URL!);
-console.error("=== Database Configuration ===");
-console.error("Database URL configured:", !!process.env.DATABASE_URL);
 
 export async function createTables() {
   try {
-    console.error("=== Creating Tables ===");
     await sql`
       CREATE TABLE IF NOT EXISTS player_stats (
         id SERIAL PRIMARY KEY,
@@ -75,17 +72,13 @@ export async function createTables() {
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
     `;
-    console.error("Tables created successfully");
   } catch (error) {
-    console.error("=== Error Creating Tables ===");
-    console.error("Error details:", error);
     throw error;
   }
 }
 
 export async function insertPlayerStats(stats: PlayerStats) {
   try {
-    console.error(`=== Inserting Stats for ${stats.name} ===`);
     await sql`
       INSERT INTO player_stats (
         player_id, name, team, position, 
@@ -121,18 +114,13 @@ export async function insertPlayerStats(stats: PlayerStats) {
         ${stats.gameDate}
       )
     `;
-    console.error("Stats inserted successfully");
   } catch (error) {
-    console.error("=== Error Inserting Stats ===");
-    console.error("Error details:", error);
     throw error;
   }
 }
 
 export async function getPlayerStatsByDate(date: string) {
   try {
-    console.error("=== Getting Player Stats ===");
-    console.error("Date:", date);
     const result = await sql`
       SELECT 
         player_id as id,
@@ -166,11 +154,8 @@ export async function getPlayerStatsByDate(date: string) {
       WHERE game_date = ${date}::date
       ORDER BY points DESC
     `;
-    console.error("Records found:", result.length);
     return result;
   } catch (error) {
-    console.error("=== Error Getting Player Stats ===");
-    console.error("Error details:", error);
     throw error;
   }
 }
