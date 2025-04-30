@@ -259,28 +259,28 @@ export default function Home() {
                         <td className="px-4 py-3 whitespace-nowrap text-indigo-700 font-bold">
                           {player.position}
                         </td>
-                        <td className="px-2 py-3 text-center">
+                        <td className="px-2 py-3 text-center text-slate-600">
                           {player.battingStats?.atBats || 0}
                         </td>
-                        <td className="px-2 py-3 text-center">
+                        <td className="px-2 py-3 text-center text-slate-600">
                           {player.battingStats?.hits || 0}
                         </td>
-                        <td className="px-2 py-3 text-center">
+                        <td className="px-2 py-3 text-center text-slate-600">
                           {player.battingStats?.homeRuns || 0}
                         </td>
-                        <td className="px-2 py-3 text-center">
+                        <td className="px-2 py-3 text-center text-slate-600">
                           {player.battingStats?.rbi || 0}
                         </td>
-                        <td className="px-2 py-3 text-center">
+                        <td className="px-2 py-3 text-center text-slate-600">
                           {player.battingStats?.runs || 0}
                         </td>
-                        <td className="px-2 py-3 text-center">
+                        <td className="px-2 py-3 text-center text-slate-600">
                           {player.battingStats?.stolenBases || 0}
                         </td>
-                        <td className="px-2 py-3 text-center">
+                        <td className="px-2 py-3 text-center text-slate-600">
                           {player.battingStats?.walks || 0}
                         </td>
-                        <td className="px-2 py-3 text-center">
+                        <td className="px-2 py-3 text-center text-slate-600">
                           {player.battingStats?.strikeouts || 0}
                         </td>
                         <td
@@ -356,31 +356,31 @@ export default function Home() {
                         <td className="px-4 py-3 whitespace-nowrap text-indigo-700 font-bold">
                           {player.position}
                         </td>
-                        <td className="px-2 py-3 text-center">
+                        <td className="px-2 py-3 text-center text-slate-600">
                           {player.pitchingStats?.inningsPitched || 0}
                         </td>
-                        <td className="px-2 py-3 text-center">
+                        <td className="px-2 py-3 text-center text-slate-600">
                           {player.pitchingStats?.earnedRuns || 0}
                         </td>
-                        <td className="px-2 py-3 text-center">
+                        <td className="px-2 py-3 text-center text-slate-600">
                           {player.pitchingStats?.pitchingStrikeouts || 0}
                         </td>
-                        <td className="px-2 py-3 text-center">
+                        <td className="px-2 py-3 text-center text-slate-600">
                           {player.pitchingStats?.hitsAllowed || 0}
                         </td>
-                        <td className="px-2 py-3 text-center">
+                        <td className="px-2 py-3 text-center text-slate-600">
                           {player.pitchingStats?.walksIssued || 0}
                         </td>
-                        <td className="px-2 py-3 text-center">
+                        <td className="px-2 py-3 text-center text-slate-600">
                           {player.pitchingStats?.wins || 0}
                         </td>
-                        <td className="px-2 py-3 text-center">
+                        <td className="px-2 py-3 text-center text-slate-600">
                           {player.pitchingStats?.losses || 0}
                         </td>
-                        <td className="px-2 py-3 text-center">
+                        <td className="px-2 py-3 text-center text-slate-600">
                           {player.pitchingStats?.saves || 0}
                         </td>
-                        <td className="px-2 py-3 text-center">
+                        <td className="px-2 py-3 text-center text-slate-600">
                           {player.pitchingStats?.holds !== null
                             ? player.pitchingStats?.holds
                             : 0}
