@@ -12,13 +12,13 @@ import {
 } from "@/lib/mlb/dates";
 
 export async function GET(request: Request) {
-  try {
-    // Get date from query parameter or default to yesterday
-    const url = new URL(request.url);
-    const dateParam = url.searchParams.get("date");
+  // Get date from query parameter or default to yesterday
+  const url = new URL(request.url);
+  const dateParam = url.searchParams.get("date");
+  let targetDate: string = getYesterdayMLB();
 
+  try {
     // Parse the requested date
-    let targetDate: string;
     if (dateParam) {
       // Validate date format (YYYY-MM-DD)
       if (!isValidDateFormat(dateParam)) {
@@ -38,9 +38,6 @@ export async function GET(request: Request) {
       }
 
       targetDate = dateParam;
-    } else {
-      // Default to yesterday in MLB timezone
-      targetDate = getYesterdayMLB();
     }
 
     // Check if we should bypass the database cache
@@ -77,12 +74,26 @@ export async function GET(request: Request) {
       });
     }
   } catch (error) {
-    if (error instanceof Error) {
-      console.error("Error stack:", error.stack);
-    }
-    return NextResponse.json(
-      { error: "Failed to fetch stats" },
-      { status: 500 }
-    );
+    console.error("Error in stats API:", error);
+
+    // Create a detailed error response
+    const errorResponse = {
+      error: "Failed to fetch stats",
+      details:
+        error instanceof Error
+          ? {
+              message: error.message,
+              stack:
+                process.env.NODE_ENV === "development"
+                  ? error.stack
+                  : undefined,
+              name: error.name,
+            }
+          : "Unknown error occurred",
+      timestamp: new Date().toISOString(),
+      date: targetDate,
+    };
+
+    return NextResponse.json(errorResponse, { status: 500 });
   }
 }
