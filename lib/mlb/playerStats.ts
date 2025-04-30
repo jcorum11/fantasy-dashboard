@@ -130,8 +130,6 @@ export async function getPlayerStatsByDate(
   date: string
 ): Promise<PlayerStats[]> {
   try {
-    console.error("=== MLB: Getting Player Stats ===");
-
     // Validate date format
     if (!isValidDateFormat(date)) {
       console.error(
@@ -142,7 +140,6 @@ export async function getPlayerStatsByDate(
     }
 
     const games = await getGamesByDate(date);
-    console.error(`Found ${games.length} games for date ${date}`);
 
     if (games.length === 0) {
       console.error(`No games found for date ${date}`);
@@ -154,11 +151,6 @@ export async function getPlayerStatsByDate(
     for (const game of games) {
       try {
         const boxscore = await getGameBoxScore(game.gamePk);
-        console.error(`Processing game: ${game.gamePk}`);
-        console.error(
-          `Teams: ${boxscore.teams.away.team.name} vs ${boxscore.teams.home.team.name}`
-        );
-
         const gamePlayerStats = processPlayerStats(boxscore, date);
         allPlayerStats.push(...gamePlayerStats);
       } catch (gameError) {
@@ -167,10 +159,8 @@ export async function getPlayerStatsByDate(
       }
     }
 
-    console.error(`Total players processed: ${allPlayerStats.length}`);
     return allPlayerStats;
   } catch (error) {
-    console.error("=== MLB: Error Getting Player Stats ===");
     console.error("Error details:", error);
     throw error;
   }

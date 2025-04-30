@@ -1,13 +1,5 @@
 import { format, subDays, addDays } from "date-fns";
 
-// Constants for MLB season
-export const MLB_SEASON = {
-  START_MONTH: 3, // March
-  START_DAY: 28, // 28th
-  END_MONTH: 10, // October
-  END_DAY: 31, // 31st
-};
-
 /**
  * Get the MLB timezone date (America/New_York)
  */
@@ -79,23 +71,6 @@ export function getGameAvailabilityMessage(date: string): string {
     return `No games were played on ${formattedDate} (past season).`;
   }
 
-  // Current season checks
-  if (month < MLB_SEASON.START_MONTH || month > MLB_SEASON.END_MONTH) {
-    return `No games were played on ${formattedDate} (off-season).`;
-  }
-
-  // If it's before the season start in the current year
-  if (month === MLB_SEASON.START_MONTH && day < MLB_SEASON.START_DAY) {
-    return `No games were played on ${formattedDate} (before season start).`;
-  }
-
-  // If it's Opening Day or later in the current season
-  if (month === MLB_SEASON.START_MONTH && day >= MLB_SEASON.START_DAY) {
-    if (isFutureDate(date)) {
-      return `Schedule data for ${formattedDate} is not yet available. The ${currentSeason} MLB season begins on March 28, ${currentSeason}.`;
-    }
-  }
-
   if (isFutureDate(date)) {
     return `No games are scheduled for ${formattedDate} yet.`;
   }
@@ -145,16 +120,6 @@ export function getNextValidDate(currentDate: string): string | null {
     return null;
   }
 
-  const [year, month, day] = nextDateStr.split("-").map(Number);
-
-  // Don't navigate past the end of season
-  if (
-    month > MLB_SEASON.END_MONTH ||
-    (month === MLB_SEASON.END_MONTH && day > MLB_SEASON.END_DAY)
-  ) {
-    return null;
-  }
-
   return nextDateStr;
 }
 
@@ -167,20 +132,5 @@ export function getPreviousValidDate(currentDate: string): string {
   }
 
   const prevDate = subDays(new Date(currentDate + "T00:00:00Z"), 1);
-  const prevDateStr = format(prevDate, "yyyy-MM-dd");
-
-  const [year, month, day] = prevDateStr.split("-").map(Number);
-
-  // Don't navigate before the start of season
-  if (
-    month < MLB_SEASON.START_MONTH ||
-    (month === MLB_SEASON.START_MONTH && day < MLB_SEASON.START_DAY)
-  ) {
-    return format(
-      new Date(year, MLB_SEASON.START_MONTH - 1, MLB_SEASON.START_DAY),
-      "yyyy-MM-dd"
-    );
-  }
-
-  return prevDateStr;
+  return format(prevDate, "yyyy-MM-dd");
 }

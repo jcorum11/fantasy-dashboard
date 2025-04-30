@@ -1,7 +1,7 @@
 import axios from "axios";
 import { format } from "date-fns";
 import { MLBBoxScore, MLBScheduleResponse } from "../types/mlb";
-import { isValidDateFormat, MLB_SEASON } from "./dates";
+import { isValidDateFormat } from "./dates";
 
 const MLB_STATS_API = "https://statsapi.mlb.com/api/v1";
 
@@ -10,8 +10,6 @@ const MLB_STATS_API = "https://statsapi.mlb.com/api/v1";
  */
 export async function getGamesByDate(date: string) {
   try {
-    console.log("DEBUG: getGamesByDate called with date:", date);
-
     // Validate date format
     if (!isValidDateFormat(date)) {
       console.error(
@@ -23,25 +21,17 @@ export async function getGamesByDate(date: string) {
 
     // Parse the date
     const [year, month, day] = date.split("-").map(Number);
-    console.error("Parsed date:", { year, month, day });
 
-    // Check if it's within the MLB season
-    const isBeforeSeason =
-      month < MLB_SEASON.START_MONTH ||
-      (month === MLB_SEASON.START_MONTH && day < MLB_SEASON.START_DAY);
-    const isAfterSeason = month > MLB_SEASON.END_MONTH;
+    // Check if it's in the future
+    const requestedDate = new Date(year, month - 1, day);
+    const today = new Date();
 
-    if (isBeforeSeason || isAfterSeason) {
-      console.error("Date is outside MLB season");
+    if (requestedDate > today) {
       return [];
     }
 
-    console.error("=== MLB: Getting Games ===");
-    console.error("Date:", date);
-
     // Log the full URL for debugging
     const url = `${MLB_STATS_API}/schedule/games/?sportId=1&date=${date}&hydrate=team`;
-    console.error("MLB API URL:", url);
 
     const response = await axios.get<MLBScheduleResponse>(url);
     return response.data.dates[0]?.games || [];
@@ -51,6 +41,7 @@ export async function getGamesByDate(date: string) {
     if (axios.isAxiosError(error)) {
       console.error("Axios error response:", error.response?.data);
       console.error("Axios error status:", error.response?.status);
+      console.error("Axios error URL:", error.config?.url);
     }
     throw error;
   }
@@ -61,9 +52,10 @@ export async function getGamesByDate(date: string) {
  */
 export async function getGameBoxScore(gamePk: number): Promise<MLBBoxScore> {
   try {
-    const url = `${MLB_STATS_API}/game/${gamePk}/boxscore?fields=teams,teams.team,teams.players,teams.players.stats,teams.players.person,teams.players.position`;
-    console.error("Fetching box score from:", url);
+    const url = `${MLB_STATS_API}/game/${gamePk}/boxscore?hydrate=team,team.teamName,team.teamId,player,player.person,player.position,player.stats,player.stats.batting,player.stats.pitching`;
+    console.log("Fetching box score from:", url);
     const response = await axios.get(url);
+    console.log("Box score response:", JSON.stringify(response.data, null, 2));
     return response.data;
   } catch (error) {
     console.error(`Error fetching box score for game ${gamePk}:`, error);
