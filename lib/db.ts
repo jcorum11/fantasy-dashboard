@@ -25,7 +25,7 @@ export type PlayerStats = {
     wins: number;
     losses: number;
     saves: number;
-    holds: number;
+    holds: number | null;
   };
   gameDate: string;
 };

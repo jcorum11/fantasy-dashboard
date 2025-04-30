@@ -1,63 +1,91 @@
 "use client";
-import { format, subDays, addDays, parseISO } from "date-fns";
+import { format } from "date-fns";
 import { PlayerStats } from "@/lib/db";
 import { useState, useEffect } from "react";
+import {
+  getYesterdayMLB,
+  getNextValidDate,
+  getPreviousValidDate,
+  canNavigateToDate,
+} from "@/lib/mlb/dates";
 
 async function getPlayerStats(date?: string) {
   const url = new URL(`${process.env.NEXT_PUBLIC_API_URL}/api/stats`);
   if (date) {
     url.searchParams.append("date", date);
   }
+  // Add a cache-busting parameter
+  url.searchParams.append("nocache", Date.now().toString());
 
-  const response = await fetch(url.toString(), {
-    next: { revalidate: 3600 },
-  });
-  const data = await response.json();
-  return data;
+  try {
+    const response = await fetch(url.toString(), {
+      cache: "no-store", // Disable caching
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      return {
+        stats: [],
+        error: errorData.error || "Failed to fetch stats",
+        date,
+      };
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching stats:", error);
+    return {
+      stats: [],
+      error: "Network error. Please try again later.",
+      date,
+    };
+  }
 }
 
 export default function Home() {
   const [viewType, setViewType] = useState<"batting" | "pitching">("batting");
   const [stats, setStats] = useState<PlayerStats[]>([]);
-  const [currentDate, setCurrentDate] = useState<Date>(subDays(new Date(), 1));
+  const [currentDate, setCurrentDate] = useState<string>(getYesterdayMLB());
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [message, setMessage] = useState<string>("");
 
-  const formattedDate = format(currentDate, "MMM d, yyyy");
-  const dateString = format(currentDate, "yyyy-MM-dd");
+  const formattedDate = format(new Date(currentDate), "MMM d, yyyy");
 
   // Fetch stats on component mount or when date changes
   useEffect(() => {
     const fetchStats = async () => {
       setIsLoading(true);
+      setMessage("");
       try {
-        const data = await getPlayerStats(dateString);
+        const data = await getPlayerStats(currentDate);
         setStats(data.stats || []);
-        // Update current date from API response to ensure consistency
-        if (data.date) {
-          setCurrentDate(parseISO(data.date));
+        if (data.error) {
+          setMessage(data.error);
+        } else if (data.message) {
+          setMessage(data.message);
         }
       } catch (error) {
         console.error("Error fetching stats:", error);
+        setMessage("Error fetching stats. Please try again later.");
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchStats();
-  }, [dateString]);
+  }, [currentDate]);
 
   // Navigation functions
   const goToPreviousDay = () => {
-    setCurrentDate((prevDate) => subDays(prevDate, 1));
+    const prevDate = getPreviousValidDate(currentDate);
+    setCurrentDate(prevDate);
   };
 
   const goToNextDay = () => {
-    const today = new Date();
-    const nextDay = addDays(currentDate, 1);
-
-    // Don't allow navigating to future dates
-    if (nextDay <= today) {
-      setCurrentDate(nextDay);
+    const nextDate = getNextValidDate(currentDate);
+    if (nextDate) {
+      setCurrentDate(nextDate);
     }
   };
 
@@ -124,11 +152,7 @@ export default function Home() {
               </button>
               <button
                 onClick={goToNextDay}
-                disabled={
-                  isLoading ||
-                  format(addDays(currentDate, 1), "yyyy-MM-dd") >
-                    format(new Date(), "yyyy-MM-dd")
-                }
+                disabled={isLoading || !getNextValidDate(currentDate)}
                 className="px-3 py-1 rounded-lg font-medium transition-colors bg-slate-100 text-slate-600 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Next Day
@@ -136,6 +160,14 @@ export default function Home() {
             </div>
           </div>
 
+          {/* Message Display */}
+          {message && (
+            <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-xl mb-4">
+              {message}
+            </div>
+          )}
+
+          {/* View Type Toggle */}
           <div className="flex gap-2 mb-6">
             <button
               onClick={() => setViewType("batting")}
@@ -159,230 +191,211 @@ export default function Home() {
             </button>
           </div>
 
-          {isLoading ? (
-            <div className="flex justify-center items-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
+          {/* Loading State */}
+          {isLoading && (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+              <p className="text-slate-600 mt-4">Loading stats...</p>
             </div>
-          ) : (
-            <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white/80">
+          )}
+
+          {/* Stats Tables */}
+          {!isLoading && (
+            <div className="overflow-x-auto">
               {viewType === "batting" ? (
-                <table className="min-w-full divide-y divide-slate-200 text-sm md:text-base">
-                  <thead className="bg-slate-100 sticky top-0 z-10">
-                    <tr>
-                      <th className="px-4 py-3 text-left font-bold text-slate-600 uppercase tracking-wider">
-                        Name
+                <table className="w-full">
+                  <thead>
+                    <tr className="text-left text-slate-500">
+                      <th className="px-4 py-3 font-semibold rounded-l-xl bg-slate-50">
+                        NAME
                       </th>
-                      <th className="px-4 py-3 text-left font-bold text-slate-600 uppercase tracking-wider">
-                        Team
+                      <th className="px-4 py-3 font-semibold bg-slate-50">
+                        TEAM
                       </th>
-                      <th className="px-4 py-3 text-left font-bold text-slate-600 uppercase tracking-wider">
-                        Pos
+                      <th className="px-4 py-3 font-semibold bg-slate-50">
+                        POS
                       </th>
-                      <th className="px-2 py-3 text-center font-bold text-slate-600 uppercase tracking-wider">
+                      <th className="px-2 py-3 text-center font-semibold bg-slate-50">
                         AB
                       </th>
-                      <th className="px-2 py-3 text-center font-bold text-slate-600 uppercase tracking-wider">
+                      <th className="px-2 py-3 text-center font-semibold bg-slate-50">
                         H
                       </th>
-                      <th className="px-2 py-3 text-center font-bold text-slate-600 uppercase tracking-wider">
+                      <th className="px-2 py-3 text-center font-semibold bg-slate-50">
                         HR
                       </th>
-                      <th className="px-2 py-3 text-center font-bold text-slate-600 uppercase tracking-wider">
+                      <th className="px-2 py-3 text-center font-semibold bg-slate-50">
                         RBI
                       </th>
-                      <th className="px-2 py-3 text-center font-bold text-slate-600 uppercase tracking-wider">
+                      <th className="px-2 py-3 text-center font-semibold bg-slate-50">
                         R
                       </th>
-                      <th className="px-2 py-3 text-center font-bold text-slate-600 uppercase tracking-wider">
+                      <th className="px-2 py-3 text-center font-semibold bg-slate-50">
                         SB
                       </th>
-                      <th className="px-2 py-3 text-center font-bold text-slate-600 uppercase tracking-wider">
+                      <th className="px-2 py-3 text-center font-semibold bg-slate-50">
                         BB
                       </th>
-                      <th className="px-2 py-3 text-center font-bold text-slate-600 uppercase tracking-wider">
+                      <th className="px-2 py-3 text-center font-semibold bg-slate-50">
                         K
                       </th>
-                      <th className="px-4 py-3 text-center font-bold text-indigo-700 uppercase tracking-wider bg-indigo-50 rounded-tr-xl">
-                        Points
+                      <th className="px-4 py-3 text-center font-semibold rounded-r-xl bg-slate-50">
+                        POINTS
                       </th>
                     </tr>
                   </thead>
-                  <tbody>
-                    {battingStats.length > 0 ? (
-                      battingStats.map((player: PlayerStats, idx: number) => (
-                        <tr
-                          key={`${player.id}-${player.gameDate}-${idx}`}
-                          className={`transition-colors duration-150 ${
-                            idx % 2 === 0 ? "bg-white/70" : "bg-slate-50/80"
-                          } hover:bg-indigo-50/80`}
-                        >
-                          <td className="px-4 py-3 whitespace-nowrap font-semibold text-slate-800">
-                            {player.name}
-                          </td>
-                          <td className="px-4 py-3 whitespace-nowrap text-slate-600">
-                            {player.team}
-                          </td>
-                          <td className="px-4 py-3 whitespace-nowrap text-indigo-700 font-bold">
-                            {player.position}
-                          </td>
-                          <td className="px-2 py-3 text-center">
-                            {player.battingStats?.atBats || 0}
-                          </td>
-                          <td className="px-2 py-3 text-center">
-                            {player.battingStats?.hits || 0}
-                          </td>
-                          <td className="px-2 py-3 text-center">
-                            {player.battingStats?.homeRuns || 0}
-                          </td>
-                          <td className="px-2 py-3 text-center">
-                            {player.battingStats?.rbi || 0}
-                          </td>
-                          <td className="px-2 py-3 text-center">
-                            {player.battingStats?.runs || 0}
-                          </td>
-                          <td className="px-2 py-3 text-center">
-                            {player.battingStats?.stolenBases || 0}
-                          </td>
-                          <td className="px-2 py-3 text-center">
-                            {player.battingStats?.walks || 0}
-                          </td>
-                          <td className="px-2 py-3 text-center">
-                            {player.battingStats?.strikeouts || 0}
-                          </td>
-                          <td
-                            className={`px-4 py-3 text-center font-bold text-lg rounded-r-xl ${
-                              (player.points || 0) >= 0
-                                ? "text-green-600 bg-green-50"
-                                : "text-red-600 bg-red-50"
-                            }`}
-                          >
-                            {formatPoints(player.points)}
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
+                  <tbody className="divide-y divide-slate-200">
+                    {battingStats.map((player: PlayerStats) => (
+                      <tr
+                        key={`${player.id}-${player.gameDate}`}
+                        className="hover:bg-slate-50/50"
+                      >
+                        <td className="px-4 py-3 whitespace-nowrap font-semibold text-slate-800">
+                          {player.name}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-slate-600">
+                          {player.team}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-indigo-700 font-bold">
+                          {player.position}
+                        </td>
+                        <td className="px-2 py-3 text-center">
+                          {player.battingStats?.atBats || 0}
+                        </td>
+                        <td className="px-2 py-3 text-center">
+                          {player.battingStats?.hits || 0}
+                        </td>
+                        <td className="px-2 py-3 text-center">
+                          {player.battingStats?.homeRuns || 0}
+                        </td>
+                        <td className="px-2 py-3 text-center">
+                          {player.battingStats?.rbi || 0}
+                        </td>
+                        <td className="px-2 py-3 text-center">
+                          {player.battingStats?.runs || 0}
+                        </td>
+                        <td className="px-2 py-3 text-center">
+                          {player.battingStats?.stolenBases || 0}
+                        </td>
+                        <td className="px-2 py-3 text-center">
+                          {player.battingStats?.walks || 0}
+                        </td>
+                        <td className="px-2 py-3 text-center">
+                          {player.battingStats?.strikeouts || 0}
+                        </td>
                         <td
-                          colSpan={12}
-                          className="px-4 py-8 text-center text-slate-500"
+                          className={`px-4 py-3 text-center font-bold text-lg rounded-r-xl ${
+                            (player.points || 0) >= 0
+                              ? "text-green-600 bg-green-50"
+                              : "text-red-600 bg-red-50"
+                          }`}
                         >
-                          No batting stats available for this date
+                          {formatPoints(player.points)}
                         </td>
                       </tr>
-                    )}
+                    ))}
                   </tbody>
                 </table>
               ) : (
-                <table className="min-w-full divide-y divide-slate-200 text-sm md:text-base">
-                  <thead className="bg-slate-100 sticky top-0 z-10">
-                    <tr>
-                      <th className="px-4 py-3 text-left font-bold text-slate-600 uppercase tracking-wider">
-                        Name
+                <table className="w-full">
+                  <thead>
+                    <tr className="text-left text-slate-500">
+                      <th className="px-4 py-3 font-semibold rounded-l-xl bg-slate-50">
+                        NAME
                       </th>
-                      <th className="px-4 py-3 text-left font-bold text-slate-600 uppercase tracking-wider">
-                        Team
+                      <th className="px-4 py-3 font-semibold bg-slate-50">
+                        TEAM
                       </th>
-                      <th className="px-4 py-3 text-left font-bold text-slate-600 uppercase tracking-wider">
-                        Pos
+                      <th className="px-4 py-3 font-semibold bg-slate-50">
+                        POS
                       </th>
-                      <th className="px-2 py-3 text-center font-bold text-slate-600 uppercase tracking-wider">
+                      <th className="px-2 py-3 text-center font-semibold bg-slate-50">
                         IP
                       </th>
-                      <th className="px-2 py-3 text-center font-bold text-slate-600 uppercase tracking-wider">
+                      <th className="px-2 py-3 text-center font-semibold bg-slate-50">
                         ER
                       </th>
-                      <th className="px-2 py-3 text-center font-bold text-slate-600 uppercase tracking-wider">
+                      <th className="px-2 py-3 text-center font-semibold bg-slate-50">
                         K
                       </th>
-                      <th className="px-2 py-3 text-center font-bold text-slate-600 uppercase tracking-wider">
+                      <th className="px-2 py-3 text-center font-semibold bg-slate-50">
                         H
                       </th>
-                      <th className="px-2 py-3 text-center font-bold text-slate-600 uppercase tracking-wider">
+                      <th className="px-2 py-3 text-center font-semibold bg-slate-50">
                         BB
                       </th>
-                      <th className="px-2 py-3 text-center font-bold text-slate-600 uppercase tracking-wider">
+                      <th className="px-2 py-3 text-center font-semibold bg-slate-50">
                         W
                       </th>
-                      <th className="px-2 py-3 text-center font-bold text-slate-600 uppercase tracking-wider">
+                      <th className="px-2 py-3 text-center font-semibold bg-slate-50">
                         L
                       </th>
-                      <th className="px-2 py-3 text-center font-bold text-slate-600 uppercase tracking-wider">
+                      <th className="px-2 py-3 text-center font-semibold bg-slate-50">
                         SV
                       </th>
-                      <th className="px-2 py-3 text-center font-bold text-slate-600 uppercase tracking-wider">
+                      <th className="px-2 py-3 text-center font-semibold bg-slate-50">
                         HLD
                       </th>
-                      <th className="px-4 py-3 text-center font-bold text-indigo-700 uppercase tracking-wider bg-indigo-50 rounded-tr-xl">
-                        Points
+                      <th className="px-4 py-3 text-center font-semibold rounded-r-xl bg-slate-50">
+                        POINTS
                       </th>
                     </tr>
                   </thead>
-                  <tbody>
-                    {pitchingStats.length > 0 ? (
-                      pitchingStats.map((player: PlayerStats, idx: number) => (
-                        <tr
-                          key={`${player.id}-${player.gameDate}-${idx}`}
-                          className={`transition-colors duration-150 ${
-                            idx % 2 === 0 ? "bg-white/70" : "bg-slate-50/80"
-                          } hover:bg-indigo-50/80`}
-                        >
-                          <td className="px-4 py-3 whitespace-nowrap font-semibold text-slate-800">
-                            {player.name}
-                          </td>
-                          <td className="px-4 py-3 whitespace-nowrap text-slate-600">
-                            {player.team}
-                          </td>
-                          <td className="px-4 py-3 whitespace-nowrap text-indigo-700 font-bold">
-                            {player.position}
-                          </td>
-                          <td className="px-2 py-3 text-center">
-                            {player.pitchingStats?.inningsPitched || 0}
-                          </td>
-                          <td className="px-2 py-3 text-center">
-                            {player.pitchingStats?.earnedRuns || 0}
-                          </td>
-                          <td className="px-2 py-3 text-center">
-                            {player.pitchingStats?.pitchingStrikeouts || 0}
-                          </td>
-                          <td className="px-2 py-3 text-center">
-                            {player.pitchingStats?.hitsAllowed || 0}
-                          </td>
-                          <td className="px-2 py-3 text-center">
-                            {player.pitchingStats?.walksIssued || 0}
-                          </td>
-                          <td className="px-2 py-3 text-center">
-                            {player.pitchingStats?.wins || 0}
-                          </td>
-                          <td className="px-2 py-3 text-center">
-                            {player.pitchingStats?.losses || 0}
-                          </td>
-                          <td className="px-2 py-3 text-center">
-                            {player.pitchingStats?.saves || 0}
-                          </td>
-                          <td className="px-2 py-3 text-center">
-                            {player.pitchingStats?.holds || 0}
-                          </td>
-                          <td
-                            className={`px-4 py-3 text-center font-bold text-lg rounded-r-xl ${
-                              (player.points || 0) >= 0
-                                ? "text-green-600 bg-green-50"
-                                : "text-red-600 bg-red-50"
-                            }`}
-                          >
-                            {formatPoints(player.points)}
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
+                  <tbody className="divide-y divide-slate-200">
+                    {pitchingStats.map((player: PlayerStats) => (
+                      <tr
+                        key={`${player.id}-${player.gameDate}`}
+                        className="hover:bg-slate-50/50"
+                      >
+                        <td className="px-4 py-3 whitespace-nowrap font-semibold text-slate-800">
+                          {player.name}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-slate-600">
+                          {player.team}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-indigo-700 font-bold">
+                          {player.position}
+                        </td>
+                        <td className="px-2 py-3 text-center">
+                          {player.pitchingStats?.inningsPitched || 0}
+                        </td>
+                        <td className="px-2 py-3 text-center">
+                          {player.pitchingStats?.earnedRuns || 0}
+                        </td>
+                        <td className="px-2 py-3 text-center">
+                          {player.pitchingStats?.pitchingStrikeouts || 0}
+                        </td>
+                        <td className="px-2 py-3 text-center">
+                          {player.pitchingStats?.hitsAllowed || 0}
+                        </td>
+                        <td className="px-2 py-3 text-center">
+                          {player.pitchingStats?.walksIssued || 0}
+                        </td>
+                        <td className="px-2 py-3 text-center">
+                          {player.pitchingStats?.wins || 0}
+                        </td>
+                        <td className="px-2 py-3 text-center">
+                          {player.pitchingStats?.losses || 0}
+                        </td>
+                        <td className="px-2 py-3 text-center">
+                          {player.pitchingStats?.saves || 0}
+                        </td>
+                        <td className="px-2 py-3 text-center">
+                          {player.pitchingStats?.holds !== null
+                            ? player.pitchingStats?.holds
+                            : 0}
+                        </td>
                         <td
-                          colSpan={13}
-                          className="px-4 py-8 text-center text-slate-500"
+                          className={`px-4 py-3 text-center font-bold text-lg rounded-r-xl ${
+                            (player.points || 0) >= 0
+                              ? "text-green-600 bg-green-50"
+                              : "text-red-600 bg-red-50"
+                          }`}
                         >
-                          No pitching stats available for this date
+                          {formatPoints(player.points)}
                         </td>
                       </tr>
-                    )}
+                    ))}
                   </tbody>
                 </table>
               )}

@@ -10,6 +10,13 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
   },
+  // Enable source maps in development
+  webpack: (config, { dev, isServer }) => {
+    if (dev) {
+      config.devtool = "eval-source-map";
+    }
+    return config;
+  },
 };
 
 module.exports = nextConfig;
