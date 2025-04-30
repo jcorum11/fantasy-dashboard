@@ -133,6 +133,13 @@ export async function getGameBoxScore(gamePk: number): Promise<MLBBoxScore> {
         }
       } else {
         // For non-Axios errors, add a generic user message
+        console.error("=== MLB: Non-Axios Error Details ===");
+        const typedError = error as Error;
+        console.error("Error type:", typedError.constructor.name);
+        console.error("Error message:", typedError.message);
+        console.error("Error stack:", typedError.stack);
+        console.error("Error object:", JSON.stringify(typedError, null, 2));
+
         (error as any).userMessage =
           "An unexpected error occurred. Please try again later.";
       }
@@ -142,8 +149,16 @@ export async function getGameBoxScore(gamePk: number): Promise<MLBBoxScore> {
     }
   }
 
-  // If we've exhausted all retries, add a user message to the last error
+  // If we've exhausted all retries, add a user message to the lastError
   if (lastError) {
+    console.error("=== MLB: All Retries Failed ===");
+    console.error("Final error:", lastError);
+    const typedLastError = lastError as Error;
+    console.error("Error type:", typedLastError.constructor.name);
+    console.error("Error message:", typedLastError.message);
+    console.error("Error stack:", typedLastError.stack);
+    console.error("Error object:", JSON.stringify(typedLastError, null, 2));
+
     (lastError as any).userMessage =
       "Unable to fetch game data after multiple attempts. Please try again later.";
   }
