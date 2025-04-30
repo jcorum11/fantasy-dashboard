@@ -1,5 +1,5 @@
 "use client";
-import { format } from "date-fns";
+import { format, parse } from "date-fns";
 import { PlayerStats } from "@/lib/db";
 import { useState, useEffect } from "react";
 import {
@@ -7,6 +7,7 @@ import {
   getNextValidDate,
   getPreviousValidDate,
   canNavigateToDate,
+  getMLBDate,
 } from "@/lib/mlb/dates";
 
 async function getPlayerStats(date?: string) {
@@ -46,11 +47,18 @@ async function getPlayerStats(date?: string) {
 export default function Home() {
   const [viewType, setViewType] = useState<"batting" | "pitching">("batting");
   const [stats, setStats] = useState<PlayerStats[]>([]);
-  const [currentDate, setCurrentDate] = useState<string>(getYesterdayMLB());
+  const [currentDate, setCurrentDate] = useState<string>(() => {
+    const yesterday = getYesterdayMLB();
+    console.log("Setting initial date to:", yesterday);
+    return yesterday;
+  });
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [message, setMessage] = useState<string>("");
 
-  const formattedDate = format(new Date(currentDate), "MMM d, yyyy");
+  const formattedDate = format(
+    parse(currentDate, "yyyy-MM-dd", new Date()),
+    "MMM d, yyyy"
+  );
 
   // Fetch stats on component mount or when date changes
   useEffect(() => {
@@ -84,8 +92,12 @@ export default function Home() {
 
   const goToNextDay = () => {
     const nextDate = getNextValidDate(currentDate);
+    console.log("Current date:", currentDate);
+    console.log("Next date:", nextDate);
     if (nextDate) {
       setCurrentDate(nextDate);
+    } else {
+      console.log("Next date is null, cannot navigate forward");
     }
   };
 

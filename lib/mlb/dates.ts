@@ -14,7 +14,7 @@ export function getMLBDate(): Date {
  */
 export function getYesterdayMLB(): string {
   const nyDate = getMLBDate();
-  return format(subDays(nyDate, 1), "yyyy-MM-dd");
+  return format(nyDate, "yyyy-MM-dd");
 }
 
 /**
@@ -131,6 +131,8 @@ export function getPreviousValidDate(currentDate: string): string {
     return getYesterdayMLB();
   }
 
-  const prevDate = subDays(new Date(currentDate + "T00:00:00Z"), 1);
+  const [year, month, day] = currentDate.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
+  const prevDate = subDays(date, 1);
   return format(prevDate, "yyyy-MM-dd");
 }
