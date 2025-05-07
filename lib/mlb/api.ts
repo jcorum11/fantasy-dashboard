@@ -1,7 +1,7 @@
 import axios from "axios";
 import { format } from "date-fns";
 import { MLBBoxScore, MLBScheduleResponse } from "../types/mlb";
-import { isValidDateFormat } from "./dates";
+import { isValidDateFormat, getMLBDate } from "./dates";
 
 const MLB_STATS_API = "https://statsapi.mlb.com/api/v1";
 const MAX_RETRIES = 3;
@@ -28,9 +28,9 @@ export async function getGamesByDate(date: string) {
     // Parse the date
     const [year, month, day] = date.split("-").map(Number);
 
-    // Check if it's in the future
+    // Check if it's in the future using MLB timezone
     const requestedDate = new Date(year, month - 1, day);
-    const today = new Date();
+    const today = getMLBDate();
 
     if (requestedDate > today) {
       return [];

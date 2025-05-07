@@ -11,7 +11,8 @@ export class PlayerStats {
     private readonly _points: number,
     private readonly _battingStats: BattingStats,
     private readonly _pitchingStats: PitchingStats,
-    private readonly _gameDate: Date
+    private readonly _gameDate: Date,
+    private readonly _isPositionPlayerPitching: boolean
   ) {}
 
   public static create(
@@ -23,7 +24,8 @@ export class PlayerStats {
     points: number,
     battingStats: BattingStats,
     pitchingStats: PitchingStats,
-    gameDate: Date
+    gameDate: Date,
+    isPositionPlayerPitching: boolean = false
   ): PlayerStats {
     if (!name || !team || !position) {
       throw new Error("Required fields cannot be empty");
@@ -37,7 +39,8 @@ export class PlayerStats {
       points,
       battingStats,
       pitchingStats,
-      gameDate
+      gameDate,
+      isPositionPlayerPitching
     );
   }
 
@@ -69,6 +72,9 @@ export class PlayerStats {
   get gameDate(): Date {
     return this._gameDate;
   }
+  get isPositionPlayerPitching(): boolean {
+    return this._isPositionPlayerPitching;
+  }
 
   // Methods
   public toJSON() {
@@ -82,6 +88,7 @@ export class PlayerStats {
       battingStats: this._battingStats.toJSON(),
       pitchingStats: this._pitchingStats.toJSON(),
       gameDate: this._gameDate.toISOString().split("T")[0],
+      isPositionPlayerPitching: this._isPositionPlayerPitching,
     };
   }
 }

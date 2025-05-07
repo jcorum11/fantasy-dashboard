@@ -108,7 +108,9 @@ function processPlayerStats(
             position = pitchingStats.inningsPitched >= 4 ? "SP" : "RP";
           }
         }
-
+        const isPitcher = ["SP", "RP", "P"].includes(position);
+        const isPositionPlayerPitching =
+          !isPitcher && pitchingStats.inningsPitched > 0;
         const playerStat = PlayerStats.create(
           player.person.id,
           player.person.fullName,
@@ -118,7 +120,8 @@ function processPlayerStats(
           points,
           battingStats,
           pitchingStats,
-          gameDateObj
+          gameDateObj,
+          isPositionPlayerPitching
         );
         playerStats.push(playerStat);
       }

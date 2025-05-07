@@ -67,6 +67,16 @@ export default function Home() {
     }
   });
 
+  // Deduplicate filteredStats by composite key
+  const dedupedFilteredStats = Array.from(
+    new Map(
+      filteredStats.map((player) => [
+        `${player.id}-${player.team}-${player.opponentTeam}-${player.position}-${player.isPositionPlayerPitching}`,
+        player,
+      ])
+    ).values()
+  );
+
   return (
     <main className="container mx-auto px-4 py-8">
       <h1 className="mb-8 text-3xl font-bold text-slate-900">
@@ -87,7 +97,7 @@ export default function Home() {
       <StatsStatus isLoading={isLoading} message={message} />
 
       {!isLoading && !message && (
-        <StatsTable stats={filteredStats} viewType={viewType} />
+        <StatsTable stats={dedupedFilteredStats} viewType={viewType} />
       )}
     </main>
   );

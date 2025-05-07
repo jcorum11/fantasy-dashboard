@@ -30,6 +30,16 @@ export function StatsTable({ stats, viewType }: StatsTableProps) {
     (a, b) => (b.points ?? 0) - (a.points ?? 0)
   );
 
+  // Deduplicate stats by a composite key (id, team, opponentTeam, position, isPositionPlayerPitching)
+  const dedupedStats = Array.from(
+    new Map(
+      sortedStats.map((player) => [
+        `${player.id}-${player.team}-${player.opponentTeam}-${player.position}-${player.isPositionPlayerPitching}`,
+        player,
+      ])
+    ).values()
+  );
+
   return (
     <div className="overflow-x-auto bg-white rounded shadow">
       <table className="w-full bg-white border border-slate-200">
@@ -108,9 +118,9 @@ export function StatsTable({ stats, viewType }: StatsTableProps) {
           </tr>
         </thead>
         <tbody>
-          {sortedStats.map((player) => (
+          {dedupedStats.map((player) => (
             <tr
-              key={`${player.id}-${player.team}-${player.opponentTeam}-${player.position}`}
+              key={`${player.id}-${player.team}-${player.opponentTeam}-${player.position}-${player.isPositionPlayerPitching}`}
               className="border-b border-slate-200 hover:bg-slate-50"
             >
               {/* Player name and team abbreviation */}
@@ -149,6 +159,11 @@ export function StatsTable({ stats, viewType }: StatsTableProps) {
                     ? "SP"
                     : "RP"
                   : player.position}
+                {viewType === "pitching" && player.isPositionPlayerPitching && (
+                  <span className="ml-2 inline-block px-2 py-0.5 rounded bg-yellow-100 text-yellow-800 text-xs font-bold align-middle">
+                    POS P
+                  </span>
+                )}
               </td>
               {viewType === "batting" ? (
                 <>
