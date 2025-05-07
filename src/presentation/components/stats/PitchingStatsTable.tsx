@@ -49,8 +49,14 @@ export function PitchingStatsTable({ stats }: PitchingStatsTableProps) {
               getPointsBg={getPointsBg}
             />
             <TableCell>{player.opponentTeam}</TableCell>
-            <TableCell className="font-semibold uppercase text-blue-700">
-              {player.position}
+            <TableCell
+              className={`font-semibold uppercase ${
+                player.pitchingStats.gamesStarted > 0
+                  ? "text-indigo-700"
+                  : "text-emerald-700"
+              }`}
+            >
+              {player.pitchingStats.gamesStarted > 0 ? "SP" : "RP"}
             </TableCell>
             <TableCell align="right">
               {player.pitchingStats.inningsPitched}
