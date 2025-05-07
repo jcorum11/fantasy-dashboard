@@ -55,7 +55,12 @@ export function calculatePitchingPoints(stats: MLBStats): number {
   let points = 0;
 
   if (stats.inningsPitched) {
-    points += parseFloat(stats.inningsPitched) * POINTS_SYSTEM.inningsPitched;
+    // Convert baseball innings format to total outs
+    const [wholeInnings, partialInning] = stats.inningsPitched.split(".");
+    const totalOuts =
+      parseInt(wholeInnings) * 3 + (parseInt(partialInning) || 0);
+    // Each out is worth 1 point
+    points += totalOuts;
   }
 
   points += (stats.earnedRuns || 0) * POINTS_SYSTEM.earnedRuns;

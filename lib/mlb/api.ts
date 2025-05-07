@@ -62,10 +62,6 @@ export async function getGameBoxScore(gamePk: number): Promise<MLBBoxScore> {
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
       const url = `${MLB_STATS_API}/game/${gamePk}/boxscore?hydrate=team,team.teamName,team.teamId,player,player.person,player.position,player.stats,player.stats.batting,player.stats.pitching`;
-      console.log(
-        `Attempt ${attempt}/${MAX_RETRIES}: Fetching box score from:`,
-        url
-      );
 
       const response = await axios.get(url, {
         timeout: 10000, // 10 second timeout
@@ -86,11 +82,6 @@ export async function getGameBoxScore(gamePk: number): Promise<MLBBoxScore> {
           "Game data is incomplete. Please try again later.";
         throw error;
       }
-
-      console.log(
-        "Box score response:",
-        JSON.stringify(response.data, null, 2)
-      );
       return response.data;
     } catch (error) {
       lastError = error;
@@ -126,7 +117,6 @@ export async function getGameBoxScore(gamePk: number): Promise<MLBBoxScore> {
         // If it's a 429 (Too Many Requests) or 5xx error, retry
         if (status === 429 || (status && status >= 500 && status < 600)) {
           if (attempt < MAX_RETRIES) {
-            console.log(`Waiting ${RETRY_DELAY}ms before retry...`);
             await sleep(RETRY_DELAY);
             continue;
           }

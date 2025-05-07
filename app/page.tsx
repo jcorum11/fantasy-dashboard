@@ -49,7 +49,6 @@ export default function Home() {
   const [stats, setStats] = useState<PlayerStats[]>([]);
   const [currentDate, setCurrentDate] = useState<string>(() => {
     const yesterday = getYesterdayMLB();
-    console.log("Setting initial date to:", yesterday);
     return yesterday;
   });
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -92,8 +91,6 @@ export default function Home() {
 
   const goToNextDay = () => {
     const nextDate = getNextValidDate(currentDate);
-    console.log("Current date:", currentDate);
-    console.log("Next date:", nextDate);
     if (nextDate) {
       setCurrentDate(nextDate);
     } else {
@@ -133,8 +130,8 @@ export default function Home() {
     );
 
   const formatPoints = (points: number | null | undefined) => {
-    if (points === null || points === undefined) return "0.00";
-    return points.toFixed(2);
+    if (points === null || points === undefined) return "0";
+    return Math.round(points).toString();
   };
 
   return (
@@ -221,6 +218,9 @@ export default function Home() {
                       <th className="px-4 py-3 font-semibold rounded-l-xl bg-slate-50">
                         NAME
                       </th>
+                      <th className="px-4 py-3 text-center font-semibold bg-slate-50">
+                        POINTS
+                      </th>
                       <th className="px-4 py-3 font-semibold bg-slate-50">
                         TEAM
                       </th>
@@ -248,11 +248,8 @@ export default function Home() {
                       <th className="px-2 py-3 text-center font-semibold bg-slate-50">
                         BB
                       </th>
-                      <th className="px-2 py-3 text-center font-semibold bg-slate-50">
-                        K
-                      </th>
                       <th className="px-4 py-3 text-center font-semibold rounded-r-xl bg-slate-50">
-                        POINTS
+                        K
                       </th>
                     </tr>
                   </thead>
@@ -264,6 +261,15 @@ export default function Home() {
                       >
                         <td className="px-4 py-3 whitespace-nowrap font-semibold text-slate-800">
                           {player.name}
+                        </td>
+                        <td
+                          className={`px-4 py-3 text-center font-bold text-lg ${
+                            (player.points || 0) >= 0
+                              ? "text-green-600 bg-green-50"
+                              : "text-red-600 bg-red-50"
+                          }`}
+                        >
+                          {formatPoints(player.points)}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-slate-600">
                           {player.team}
@@ -292,17 +298,8 @@ export default function Home() {
                         <td className="px-2 py-3 text-center text-slate-600">
                           {player.battingStats?.walks || 0}
                         </td>
-                        <td className="px-2 py-3 text-center text-slate-600">
+                        <td className="px-4 py-3 text-center text-slate-600 rounded-r-xl">
                           {player.battingStats?.strikeouts || 0}
-                        </td>
-                        <td
-                          className={`px-4 py-3 text-center font-bold text-lg rounded-r-xl ${
-                            (player.points || 0) >= 0
-                              ? "text-green-600 bg-green-50"
-                              : "text-red-600 bg-red-50"
-                          }`}
-                        >
-                          {formatPoints(player.points)}
                         </td>
                       </tr>
                     ))}
@@ -314,6 +311,9 @@ export default function Home() {
                     <tr className="text-left text-slate-500">
                       <th className="px-4 py-3 font-semibold rounded-l-xl bg-slate-50">
                         NAME
+                      </th>
+                      <th className="px-4 py-3 text-center font-semibold bg-slate-50">
+                        POINTS
                       </th>
                       <th className="px-4 py-3 font-semibold bg-slate-50">
                         TEAM
@@ -345,11 +345,8 @@ export default function Home() {
                       <th className="px-2 py-3 text-center font-semibold bg-slate-50">
                         SV
                       </th>
-                      <th className="px-2 py-3 text-center font-semibold bg-slate-50">
-                        HLD
-                      </th>
                       <th className="px-4 py-3 text-center font-semibold rounded-r-xl bg-slate-50">
-                        POINTS
+                        HLD
                       </th>
                     </tr>
                   </thead>
@@ -361,6 +358,15 @@ export default function Home() {
                       >
                         <td className="px-4 py-3 whitespace-nowrap font-semibold text-slate-800">
                           {player.name}
+                        </td>
+                        <td
+                          className={`px-4 py-3 text-center font-bold text-lg ${
+                            (player.points || 0) >= 0
+                              ? "text-green-600 bg-green-50"
+                              : "text-red-600 bg-red-50"
+                          }`}
+                        >
+                          {formatPoints(player.points)}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-slate-600">
                           {player.team}
@@ -392,19 +398,10 @@ export default function Home() {
                         <td className="px-2 py-3 text-center text-slate-600">
                           {player.pitchingStats?.saves || 0}
                         </td>
-                        <td className="px-2 py-3 text-center text-slate-600">
+                        <td className="px-4 py-3 text-center text-slate-600 rounded-r-xl">
                           {player.pitchingStats?.holds !== null
                             ? player.pitchingStats?.holds
                             : 0}
-                        </td>
-                        <td
-                          className={`px-4 py-3 text-center font-bold text-lg rounded-r-xl ${
-                            (player.points || 0) >= 0
-                              ? "text-green-600 bg-green-50"
-                              : "text-red-600 bg-red-50"
-                          }`}
-                        >
-                          {formatPoints(player.points)}
                         </td>
                       </tr>
                     ))}
