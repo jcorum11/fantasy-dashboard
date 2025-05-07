@@ -8,7 +8,9 @@ interface TableHeaderProps {
 export function TableHeader({ children, align = "left" }: TableHeaderProps) {
   return (
     <th
-      className={`px-4 py-2 text-${align} text-sm font-medium text-slate-600 border-b border-slate-200`}
+      className={`px-4 py-2 text-sm font-medium text-slate-600 border-b border-slate-200 ${
+        align === "right" ? "text-right" : "text-left"
+      }`}
     >
       {children}
     </th>
@@ -28,7 +30,9 @@ export function TableCell({
 }: TableCellProps) {
   return (
     <td
-      className={`px-4 py-2 text-sm text-${align} text-slate-600 ${className}`}
+      className={`px-4 py-2 text-sm ${
+        align === "right" ? "text-right" : "text-left"
+      } ${className} ${!className.includes("text-") ? "text-slate-600" : ""}`}
     >
       {children}
     </td>
