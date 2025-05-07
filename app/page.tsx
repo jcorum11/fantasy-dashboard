@@ -279,7 +279,15 @@ export default function Home() {
                         <td className="px-4 py-3 whitespace-nowrap text-slate-600">
                           {player.opponentTeam}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-indigo-700 font-bold">
+                        <td
+                          className={`px-4 py-3 whitespace-nowrap font-bold ${
+                            player.position === "SP"
+                              ? "text-blue-600"
+                              : player.position === "RP"
+                              ? "text-orange-600"
+                              : "text-indigo-700"
+                          }`}
+                        >
                           {player.position}
                         </td>
                         <td className="px-2 py-3 text-center text-slate-600">
@@ -381,7 +389,15 @@ export default function Home() {
                         <td className="px-4 py-3 whitespace-nowrap text-slate-600">
                           {player.opponentTeam}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-indigo-700 font-bold">
+                        <td
+                          className={`px-4 py-3 whitespace-nowrap font-bold ${
+                            player.position === "SP"
+                              ? "text-blue-600"
+                              : player.position === "RP"
+                              ? "text-orange-600"
+                              : "text-indigo-700"
+                          }`}
+                        >
                           {player.position}
                         </td>
                         <td className="px-2 py-3 text-center text-slate-600">

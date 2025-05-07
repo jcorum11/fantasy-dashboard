@@ -22,6 +22,7 @@ export interface MLBStats {
   hitsAllowed?: number;
   walksIssued?: number;
   holds?: number;
+  gamesStarted?: number;
 }
 
 export interface MLBPlayer {

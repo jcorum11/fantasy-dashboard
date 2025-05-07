@@ -45,6 +45,7 @@ function processPlayerStats(
         losses: 0,
         saves: 0,
         holds: null,
+        gamesStarted: 0,
       };
 
       if (player.stats?.batting?.gamesPlayed) {
@@ -84,6 +85,7 @@ function processPlayerStats(
           losses: player.stats.pitching.losses,
           saves: player.stats.pitching.saves,
           holds: player.stats.pitching.holds,
+          gamesStarted: player.stats.pitching.gamesStarted,
         };
         points += calculatePitchingPoints(stats);
         pitchingStats = {
@@ -98,6 +100,7 @@ function processPlayerStats(
           losses: stats.losses || 0,
           saves: stats.saves || 0,
           holds: stats.holds === undefined ? null : stats.holds,
+          gamesStarted: stats.gamesStarted || 0,
         };
       }
 
@@ -109,12 +112,29 @@ function processPlayerStats(
         pitchingStats.inningsPitched > 0 ||
         pitchingStats.pitchingStrikeouts > 0
       ) {
+        // For pitchers, determine if they're a starter or reliever based on their stats
+        let position = player.position.abbreviation;
+        if (player.stats?.pitching?.gamesPlayed) {
+          // If they started the game, they're a starter
+          if (player.stats.pitching.gamesStarted > 0) {
+            position = "SP";
+          }
+          // If they have a save or hold, they're a reliever
+          else if (pitchingStats.saves > 0 || pitchingStats.holds !== null) {
+            position = "RP";
+          }
+          // If they pitched more than 4 innings, they're likely a starter
+          else {
+            position = pitchingStats.inningsPitched >= 4 ? "SP" : "RP";
+          }
+        }
+
         playerStats.push({
           id: player.person.id,
           name: player.person.fullName,
           team: team.team.abbreviation || team.team.name,
           opponentTeam: opponentTeam.abbreviation || opponentTeam.name,
-          position: player.position.abbreviation,
+          position,
           points,
           battingStats,
           pitchingStats,
