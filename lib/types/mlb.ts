@@ -63,10 +63,20 @@ export interface MLBPlayer {
 }
 
 export interface MLBTeam {
-  team: {
-    name: string;
+  leagueRecord: {
+    wins: number;
+    losses: number;
+    pct: string;
   };
-  players: Record<string, MLBPlayer>;
+  score: number;
+  team: {
+    id: number;
+    name: string;
+    link: string;
+  };
+  isWinner: boolean;
+  splitSquad: boolean;
+  seriesNumber: number;
 }
 
 export interface MLBBoxScore {
@@ -127,6 +137,7 @@ export interface MLBPlayerBoxScore {
       losses?: number;
       saves?: number;
       holds?: number;
+      gamesStarted?: number;
     };
   };
 }

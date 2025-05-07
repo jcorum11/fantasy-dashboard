@@ -1,8 +1,10 @@
-import { PlayerStats } from "../db";
 import { MLBBoxScore, MLBStats } from "../types/mlb";
 import { calculateBattingPoints, calculatePitchingPoints } from "./points";
 import { getGamesByDate, getGameBoxScore } from "./api";
 import { isValidDateFormat } from "./dates";
+import { BattingStats } from "../../src/domain/models/BattingStats";
+import { PitchingStats } from "../../src/domain/models/PitchingStats";
+import { PlayerStats } from "../../src/domain/models/PlayerStats";
 
 /**
  * Process player stats from a boxscore
@@ -14,6 +16,7 @@ function processPlayerStats(
   const playerStats: PlayerStats[] = [];
   const awayTeam = boxscore.teams.away.team;
   const homeTeam = boxscore.teams.home.team;
+  const gameDateObj = new Date(gameDate);
 
   // Process both teams
   ["away", "home"].forEach((teamType) => {
@@ -24,29 +27,8 @@ function processPlayerStats(
     // Process each player
     players.forEach((player) => {
       let points = 0;
-      let battingStats = {
-        atBats: 0,
-        hits: 0,
-        homeRuns: 0,
-        rbi: 0,
-        runs: 0,
-        stolenBases: 0,
-        strikeouts: 0,
-        walks: 0,
-      };
-
-      let pitchingStats: PlayerStats["pitchingStats"] = {
-        inningsPitched: 0,
-        earnedRuns: 0,
-        pitchingStrikeouts: 0,
-        hitsAllowed: 0,
-        walksIssued: 0,
-        wins: 0,
-        losses: 0,
-        saves: 0,
-        holds: null,
-        gamesStarted: 0,
-      };
+      let battingStats = BattingStats.create(0, 0, 0, 0, 0, 0, 0, 0);
+      let pitchingStats = PitchingStats.create(0, 0, 0, 0, 0, 0, 0, 0, null, 0);
 
       if (player.stats?.batting?.gamesPlayed) {
         const stats: MLBStats = {
@@ -62,16 +44,16 @@ function processPlayerStats(
           walks: player.stats.batting.baseOnBalls,
         };
         points += calculateBattingPoints(stats);
-        battingStats = {
-          atBats: stats.atBats || 0,
-          hits: stats.hits || 0,
-          homeRuns: stats.homeRuns || 0,
-          rbi: stats.rbi || 0,
-          runs: stats.runs || 0,
-          stolenBases: stats.stolenBases || 0,
-          strikeouts: stats.strikeouts || 0,
-          walks: stats.walks || 0,
-        };
+        battingStats = BattingStats.create(
+          stats.atBats || 0,
+          stats.hits || 0,
+          stats.homeRuns || 0,
+          stats.rbi || 0,
+          stats.runs || 0,
+          stats.stolenBases || 0,
+          stats.strikeouts || 0,
+          stats.walks || 0
+        );
       }
 
       if (player.stats?.pitching?.gamesPlayed) {
@@ -85,23 +67,21 @@ function processPlayerStats(
           losses: player.stats.pitching.losses,
           saves: player.stats.pitching.saves,
           holds: player.stats.pitching.holds,
-          gamesStarted: player.stats.pitching.gamesStarted,
+          gamesStarted: player.stats.pitching.gamesStarted || 0,
         };
         points += calculatePitchingPoints(stats);
-        pitchingStats = {
-          inningsPitched: stats.inningsPitched
-            ? parseFloat(stats.inningsPitched)
-            : 0,
-          earnedRuns: stats.earnedRuns || 0,
-          pitchingStrikeouts: stats.pitchingStrikeouts || 0,
-          hitsAllowed: stats.hitsAllowed || 0,
-          walksIssued: stats.walksIssued || 0,
-          wins: stats.wins || 0,
-          losses: stats.losses || 0,
-          saves: stats.saves || 0,
-          holds: stats.holds === undefined ? null : stats.holds,
-          gamesStarted: stats.gamesStarted || 0,
-        };
+        pitchingStats = PitchingStats.create(
+          stats.inningsPitched ? parseFloat(stats.inningsPitched) : 0,
+          stats.earnedRuns || 0,
+          stats.pitchingStrikeouts || 0,
+          stats.hitsAllowed || 0,
+          stats.walksIssued || 0,
+          stats.wins || 0,
+          stats.losses || 0,
+          stats.saves || 0,
+          stats.holds === undefined ? null : stats.holds,
+          stats.gamesStarted || 0
+        );
       }
 
       // Only add players who have stats
@@ -129,17 +109,18 @@ function processPlayerStats(
           }
         }
 
-        playerStats.push({
-          id: player.person.id,
-          name: player.person.fullName,
-          team: team.team.abbreviation || team.team.name,
-          opponentTeam: opponentTeam.abbreviation || opponentTeam.name,
+        const playerStat = PlayerStats.create(
+          player.person.id,
+          player.person.fullName,
+          team.team.abbreviation || team.team.name,
+          opponentTeam.abbreviation || opponentTeam.name,
           position,
           points,
           battingStats,
           pitchingStats,
-          gameDate,
-        });
+          gameDateObj
+        );
+        playerStats.push(playerStat);
       }
     });
   });

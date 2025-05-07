@@ -2,24 +2,21 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-geist-sans",
-});
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Fantasy Baseball Dashboard",
-  description: "Track your fantasy baseball team's performance",
+  title: "MLB Player Stats Dashboard",
+  description: "View MLB player statistics and fantasy points",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html lang="en" className="h-full">
-      <body className={`${inter.variable} font-sans antialiased h-full`}>
+    <html lang="en">
+      <body className={`${inter.className} min-h-screen bg-white`}>
         {children}
       </body>
     </html>
