@@ -19,9 +19,10 @@ export function PitchingStatsTable({ stats }: PitchingStatsTableProps) {
   return (
     <table className="w-full bg-white border border-slate-200">
       <thead>
+        {/* TODO: Add sticky positioning to freeze header row and leftmost name columns */}
         <tr>
           <TableHeader>NAME</TableHeader>
-          <TableHeader align="right">POINTS</TableHeader>
+          <TableHeader align="center">POINTS</TableHeader>
           <TableHeader>OPP</TableHeader>
           <TableHeader>POS</TableHeader>
           <TableHeader align="right">IP</TableHeader>
@@ -48,6 +49,7 @@ export function PitchingStatsTable({ stats }: PitchingStatsTableProps) {
               getPointsClass={getPointsClass}
               getPointsBg={getPointsBg}
             />
+            {/* TODO: Add @ sign for when game is hosted at opponent's stadium */}
             <TableCell>{player.opponentTeam}</TableCell>
             <TableCell
               className={`font-semibold uppercase ${

@@ -2,16 +2,20 @@ import { ReactNode } from "react";
 
 interface TableHeaderProps {
   children: ReactNode;
-  align?: "left" | "right";
+  align?: "left" | "right" | "center";
 }
+
+const baseHeaderClasses =
+  "px-4 py-2 text-sm font-medium text-slate-600 border-b border-slate-200";
+const alignmentClasses = {
+  right: "text-right",
+  center: "text-center",
+  left: "text-left",
+};
 
 export function TableHeader({ children, align = "left" }: TableHeaderProps) {
   return (
-    <th
-      className={`px-4 py-2 text-sm font-medium text-slate-600 border-b border-slate-200 ${
-        align === "right" ? "text-right" : "text-left"
-      }`}
-    >
+    <th className={`${baseHeaderClasses} ${alignmentClasses[align]}`}>
       {children}
     </th>
   );
@@ -23,6 +27,8 @@ interface TableCellProps {
   className?: string;
 }
 
+const baseCellClasses = "px-4 py-2 text-sm text-slate-600";
+
 export function TableCell({
   children,
   align = "left",
@@ -30,9 +36,9 @@ export function TableCell({
 }: TableCellProps) {
   return (
     <td
-      className={`px-4 py-2 text-sm ${
+      className={`${baseCellClasses} ${
         align === "right" ? "text-right" : "text-left"
-      } ${className} ${!className.includes("text-") ? "text-slate-600" : ""}`}
+      } ${className}`}
     >
       {children}
     </td>
