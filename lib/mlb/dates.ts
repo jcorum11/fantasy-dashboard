@@ -89,6 +89,7 @@ export function canNavigateToDate(date: string): boolean {
   const [year, month, day] = date.split("-").map(Number);
   const today = getMLBDate();
   const currentSeason = today.getFullYear();
+  const yesterday = getYesterdayMLB();
 
   // Can't navigate to future seasons
   if (year > currentSeason) {
@@ -101,7 +102,6 @@ export function canNavigateToDate(date: string): boolean {
   }
 
   // For current season
-  const yesterday = getYesterdayMLB();
   return date <= yesterday;
 }
 
@@ -113,14 +113,20 @@ export function getNextValidDate(currentDate: string): string | null {
     return null;
   }
 
-  const nextDate = addDays(new Date(currentDate + "T00:00:00Z"), 1);
-  const nextDateStr = format(nextDate, "yyyy-MM-dd");
+  try {
+    const baseDate = new Date(currentDate + "T00:00:00Z");
+    const nextDate = addDays(baseDate, 1);
+    const nextDateStr = nextDate.toISOString().slice(0, 10); // Always UTC
 
-  if (!canNavigateToDate(nextDateStr)) {
+    if (!canNavigateToDate(nextDateStr)) {
+      return null;
+    }
+
+    return nextDateStr;
+  } catch (error) {
+    console.error("Error calculating next date:", error);
     return null;
   }
-
-  return nextDateStr;
 }
 
 /**

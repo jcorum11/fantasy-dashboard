@@ -94,7 +94,9 @@ export default function Home() {
     if (nextDate) {
       setCurrentDate(nextDate);
     } else {
-      console.log("Next date is null, cannot navigate forward");
+      setMessage(
+        "Cannot navigate to next date - it's either invalid or in the future"
+      );
     }
   };
 
