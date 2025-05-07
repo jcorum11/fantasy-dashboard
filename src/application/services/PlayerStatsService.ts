@@ -168,7 +168,9 @@ export class PlayerStatsService {
               points,
               battingStats,
               pitchingStats,
-              gameDateObj
+              gameDateObj,
+              false,
+              teamType === "home"
             )
           );
         }

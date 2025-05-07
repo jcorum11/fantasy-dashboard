@@ -55,8 +55,10 @@ export function PitchingStatsTable({ stats }: PitchingStatsTableProps) {
                 getPointsClass={getPointsClass}
                 getPointsBg={getPointsBg}
               />
-              {/* TODO: Add @ sign for when game is hosted at opponent's stadium */}
-              <TableCell>{player.opponentTeam}</TableCell>
+              <TableCell>
+                {!player.isHomeTeam ? "@" : ""}
+                {player.opponentTeam}
+              </TableCell>
               <TableCell
                 className={`font-semibold uppercase ${
                   player.pitchingStats.gamesStarted > 0

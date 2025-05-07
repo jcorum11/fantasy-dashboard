@@ -47,7 +47,10 @@ export function BattingStatsTable({ stats }: BattingStatsTableProps) {
               getPointsClass={getPointsClass}
               getPointsBg={getPointsBg}
             />
-            <TableCell>{player.opponentTeam}</TableCell>
+            <TableCell>
+              {!player.isHomeTeam ? "@" : ""}
+              {player.opponentTeam}
+            </TableCell>
             <TableCell className="font-semibold uppercase text-blue-700">
               {player.position}
             </TableCell>

@@ -73,7 +73,8 @@ function processPlayerStats(
           stats.battingStats,
           stats.pitchingStats,
           gameDateObj,
-          isPositionPlayerPitching
+          isPositionPlayerPitching,
+          teamType === "home"
         );
         playerStats.push(playerStat);
       }
