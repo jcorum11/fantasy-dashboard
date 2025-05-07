@@ -1,5 +1,4 @@
 import axios, { AxiosInstance, AxiosError } from "axios";
-import { format } from "date-fns";
 import { MLBBoxScore, MLBScheduleResponse } from "../types/mlb";
 import { isValidDateFormat, getMLBDate } from "./dates";
 
