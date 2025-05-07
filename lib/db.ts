@@ -4,6 +4,7 @@ export type PlayerStats = {
   id: number;
   name: string;
   team: string;
+  opponentTeam: string;
   position: string;
   points: number;
   battingStats: {

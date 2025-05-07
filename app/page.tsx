@@ -222,7 +222,7 @@ export default function Home() {
                         POINTS
                       </th>
                       <th className="px-4 py-3 font-semibold bg-slate-50">
-                        TEAM
+                        OPP
                       </th>
                       <th className="px-4 py-3 font-semibold bg-slate-50">
                         POS
@@ -259,8 +259,13 @@ export default function Home() {
                         key={`${player.id}-${player.gameDate}`}
                         className="hover:bg-slate-50/50"
                       >
-                        <td className="px-4 py-3 whitespace-nowrap font-semibold text-slate-800">
-                          {player.name}
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <div className="font-semibold text-slate-800">
+                            {player.name}{" "}
+                            <span className="text-sm text-slate-500 font-medium">
+                              {player.team}
+                            </span>
+                          </div>
                         </td>
                         <td
                           className={`px-4 py-3 text-center font-bold text-lg ${
@@ -272,7 +277,7 @@ export default function Home() {
                           {formatPoints(player.points)}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-slate-600">
-                          {player.team}
+                          {player.opponentTeam}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-indigo-700 font-bold">
                           {player.position}
@@ -316,7 +321,7 @@ export default function Home() {
                         POINTS
                       </th>
                       <th className="px-4 py-3 font-semibold bg-slate-50">
-                        TEAM
+                        OPP
                       </th>
                       <th className="px-4 py-3 font-semibold bg-slate-50">
                         POS
@@ -356,8 +361,13 @@ export default function Home() {
                         key={`${player.id}-${player.gameDate}`}
                         className="hover:bg-slate-50/50"
                       >
-                        <td className="px-4 py-3 whitespace-nowrap font-semibold text-slate-800">
-                          {player.name}
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <div className="font-semibold text-slate-800">
+                            {player.name}{" "}
+                            <span className="text-sm text-slate-500 font-medium">
+                              {player.team}
+                            </span>
+                          </div>
                         </td>
                         <td
                           className={`px-4 py-3 text-center font-bold text-lg ${
@@ -369,7 +379,7 @@ export default function Home() {
                           {formatPoints(player.points)}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-slate-600">
-                          {player.team}
+                          {player.opponentTeam}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-indigo-700 font-bold">
                           {player.position}

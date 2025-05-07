@@ -80,6 +80,7 @@ export interface MLBTeamBoxScore {
     id: number;
     name: string;
     link: string;
+    abbreviation: string;
   };
   players: {
     [key: string]: MLBPlayerBoxScore;

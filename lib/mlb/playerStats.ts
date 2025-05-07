@@ -12,11 +12,14 @@ function processPlayerStats(
   gameDate: string
 ): PlayerStats[] {
   const playerStats: PlayerStats[] = [];
+  const awayTeam = boxscore.teams.away.team;
+  const homeTeam = boxscore.teams.home.team;
 
   // Process both teams
   ["away", "home"].forEach((teamType) => {
     const team = boxscore.teams[teamType as keyof typeof boxscore.teams];
     const players = Object.values(team.players);
+    const opponentTeam = teamType === "away" ? homeTeam : awayTeam;
 
     // Process each player
     players.forEach((player) => {
@@ -109,7 +112,8 @@ function processPlayerStats(
         playerStats.push({
           id: player.person.id,
           name: player.person.fullName,
-          team: team.team.name,
+          team: team.team.abbreviation || team.team.name,
+          opponentTeam: opponentTeam.abbreviation || opponentTeam.name,
           position: player.position.abbreviation,
           points,
           battingStats,
