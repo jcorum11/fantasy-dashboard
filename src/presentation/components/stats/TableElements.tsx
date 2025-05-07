@@ -3,6 +3,7 @@ import { ReactNode } from "react";
 interface TableHeaderProps {
   children: ReactNode;
   align?: "left" | "right" | "center";
+  className?: string;
 }
 
 const baseHeaderClasses =
@@ -13,9 +14,15 @@ const alignmentClasses = {
   left: "text-left",
 };
 
-export function TableHeader({ children, align = "left" }: TableHeaderProps) {
+export function TableHeader({
+  children,
+  align = "left",
+  className = "",
+}: TableHeaderProps) {
   return (
-    <th className={`${baseHeaderClasses} ${alignmentClasses[align]}`}>
+    <th
+      className={`${baseHeaderClasses} ${alignmentClasses[align]} ${className}`}
+    >
       {children}
     </th>
   );
@@ -48,11 +55,18 @@ export function TableCell({
 interface PlayerNameCellProps {
   name: string;
   team: string;
+  className?: string;
 }
 
-export function PlayerNameCell({ name, team }: PlayerNameCellProps) {
+export function PlayerNameCell({
+  name,
+  team,
+  className = "",
+}: PlayerNameCellProps) {
   return (
-    <td className="px-4 py-2 text-sm font-medium text-slate-900 whitespace-nowrap">
+    <td
+      className={`px-4 py-2 text-sm font-medium text-slate-900 whitespace-nowrap ${className}`}
+    >
       <span className="font-semibold text-base">{name}</span>{" "}
       <span className="text-xs text-slate-500 align-middle font-semibold uppercase">
         {team}
