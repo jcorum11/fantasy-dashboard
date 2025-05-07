@@ -1,5 +1,5 @@
-import { BattingStats } from "./BattingStats";
-import { PitchingStats } from "./PitchingStats";
+import { BattingStats } from "@/src/domain/models/BattingStats";
+import { PitchingStats } from "@/src/domain/models/PitchingStats";
 
 export class PlayerStats {
   private constructor(
