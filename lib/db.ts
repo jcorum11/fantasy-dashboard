@@ -1,4 +1,5 @@
 import { neon, neonConfig } from "@neondatabase/serverless";
+import format from "pg-format";
 
 export type PlayerStats = {
   id: number;
@@ -116,6 +117,71 @@ export async function insertPlayerStats(stats: PlayerStats) {
         ${stats.gameDate}
       )
     `;
+  } catch (error) {
+    throw error;
+  }
+}
+
+export async function insertPlayerStatsBatch(statsArray: PlayerStats[]) {
+  if (statsArray.length === 0) return;
+  try {
+    const columns = [
+      "player_id",
+      "name",
+      "team",
+      "position",
+      "at_bats",
+      "hits",
+      "home_runs",
+      "rbis",
+      "runs",
+      "stolen_bases",
+      "strikeouts",
+      "walks",
+      "innings_pitched",
+      "earned_runs",
+      "wins",
+      "losses",
+      "saves",
+      "pitching_strikeouts",
+      "hits_allowed",
+      "walks_issued",
+      "holds",
+      "points",
+      "game_date",
+    ];
+    const valueTuples = statsArray.map((stats) => [
+      stats.id,
+      stats.name,
+      stats.team,
+      stats.position,
+      stats.battingStats.atBats,
+      stats.battingStats.hits,
+      stats.battingStats.homeRuns,
+      stats.battingStats.rbi,
+      stats.battingStats.runs,
+      stats.battingStats.stolenBases,
+      stats.battingStats.strikeouts,
+      stats.battingStats.walks,
+      stats.pitchingStats.inningsPitched,
+      stats.pitchingStats.earnedRuns,
+      stats.pitchingStats.wins,
+      stats.pitchingStats.losses,
+      stats.pitchingStats.saves,
+      stats.pitchingStats.pitchingStrikeouts,
+      stats.pitchingStats.hitsAllowed,
+      stats.pitchingStats.walksIssued,
+      stats.pitchingStats.holds,
+      stats.points,
+      stats.gameDate,
+    ]);
+    const query = format(
+      `INSERT INTO player_stats (
+        ${columns.join(", ")}
+      ) VALUES %L`,
+      valueTuples
+    );
+    await sql.query(query);
   } catch (error) {
     throw error;
   }
