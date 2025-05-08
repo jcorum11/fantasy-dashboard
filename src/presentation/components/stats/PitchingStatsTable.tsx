@@ -62,8 +62,8 @@ export function PitchingStatsTable({ stats }: PitchingStatsTableProps) {
               <TableCell
                 className={`font-semibold uppercase ${
                   player.pitchingStats.gamesStarted > 0
-                    ? "text-indigo-700"
-                    : "text-emerald-700"
+                    ? "text-[#4338ca]"
+                    : "text-[#047857]"
                 }`}
               >
                 {player.pitchingStats.gamesStarted > 0 ? "SP" : "RP"}
