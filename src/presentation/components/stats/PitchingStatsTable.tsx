@@ -62,31 +62,37 @@ export function PitchingStatsTable({ stats }: PitchingStatsTableProps) {
               <TableCell
                 className={`font-semibold uppercase ${
                   player.pitchingStats.gamesStarted > 0
-                    ? "text-[#4338ca]"
-                    : "text-[#047857]"
+                    ? "text-indigo-700"
+                    : "text-emerald-700"
                 }`}
               >
                 {player.pitchingStats.gamesStarted > 0 ? "SP" : "RP"}
               </TableCell>
-              <TableCell align="right">
+              <TableCell align="right" className="text-slate-600">
                 {player.pitchingStats.inningsPitched}
               </TableCell>
-              <TableCell align="right">
+              <TableCell align="right" className="text-slate-600">
                 {player.pitchingStats.earnedRuns}
               </TableCell>
-              <TableCell align="right">
+              <TableCell align="right" className="text-slate-600">
                 {player.pitchingStats.pitchingStrikeouts}
               </TableCell>
-              <TableCell align="right">
+              <TableCell align="right" className="text-slate-600">
                 {player.pitchingStats.hitsAllowed}
               </TableCell>
-              <TableCell align="right">
+              <TableCell align="right" className="text-slate-600">
                 {player.pitchingStats.walksIssued}
               </TableCell>
-              <TableCell align="right">{player.pitchingStats.wins}</TableCell>
-              <TableCell align="right">{player.pitchingStats.losses}</TableCell>
-              <TableCell align="right">{player.pitchingStats.saves}</TableCell>
-              <TableCell align="right">
+              <TableCell align="right" className="text-slate-600">
+                {player.pitchingStats.wins}
+              </TableCell>
+              <TableCell align="right" className="text-slate-600">
+                {player.pitchingStats.losses}
+              </TableCell>
+              <TableCell align="right" className="text-slate-600">
+                {player.pitchingStats.saves}
+              </TableCell>
+              <TableCell align="right" className="text-slate-600">
                 {player.pitchingStats.holds ?? "-"}
               </TableCell>
             </tr>
