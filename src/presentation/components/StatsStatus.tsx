@@ -1,3 +1,5 @@
+import { WarningMessage } from "./WarningMessage";
+
 interface StatsStatusProps {
   isLoading: boolean;
   message: string | null;
@@ -14,7 +16,7 @@ export function StatsStatus({ isLoading, message }: StatsStatusProps) {
           <span className="ml-2">Loading stats...</span>
         </div>
       )}
-      {message && <div className="text-sm text-slate-600">{message}</div>}
+      {message && <WarningMessage message={message} />}
     </div>
   );
 }

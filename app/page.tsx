@@ -8,6 +8,7 @@ import { StatsTable } from "@/src/presentation/components/StatsTable";
 import { StatsStatus } from "@/src/presentation/components/StatsStatus";
 import { PlayerStatsClient } from "@/src/application/services/PlayerStatsClient";
 import { PlayerStats } from "@/src/domain/models/PlayerStats";
+import { getGameAvailabilityMessage } from "@/lib/mlb/dates";
 
 const playerStatsClient = new PlayerStatsClient();
 
@@ -32,6 +33,11 @@ export default function Home() {
       } else {
         const statsArray = Array.isArray(response.stats) ? response.stats : [];
         setStats(statsArray);
+
+        // If no stats are available, show the game availability message
+        if (statsArray.length === 0) {
+          setMessage(getGameAvailabilityMessage(formattedDate));
+        }
       }
     } catch (error) {
       setMessage("Failed to fetch stats. Please try again.");
