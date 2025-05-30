@@ -274,7 +274,15 @@ export default function TopPerformers() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Top Performers by Position</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Top Performers by Position</h1>
+        <a
+          href="/"
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          Back to Daily Stats
+        </a>
+      </div>
 
       {/* Position Toolbar */}
       <div className="mb-8">
