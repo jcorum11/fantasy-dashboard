@@ -91,6 +91,16 @@ export default function Home() {
 
       {/* Replacement Level Dashboard removed */}
 
+      {/* Link to Weekly Points Page */}
+      <div className="mb-8">
+        <a
+          href="/weekly-points"
+          className="inline-block px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow hover:bg-blue-700 transition-colors"
+        >
+          View Weekly Points Dashboard
+        </a>
+      </div>
+
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <DateNavigation
           currentDate={currentDate}
