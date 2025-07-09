@@ -89,15 +89,7 @@ export default function Home() {
         MLB Player Stats
       </h1>
 
-      {/* Link to Replacement Level Page */}
-      <div className="mb-8">
-        <a
-          href="/replacement-level"
-          className="inline-block px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow hover:bg-blue-700 transition-colors"
-        >
-          View Replacement Level Dashboard
-        </a>
-      </div>
+      {/* Replacement Level Dashboard removed */}
 
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <DateNavigation
