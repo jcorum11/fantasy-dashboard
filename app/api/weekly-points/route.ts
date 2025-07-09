@@ -17,29 +17,46 @@ export async function GET() {
     const currentDate = new Date();
     const currentYear = currentDate.getFullYear();
     const currentMonth = currentDate.getMonth() + 1; // 1-12
-    const season = currentMonth >= 11 || currentMonth <= 2 ? currentYear - 1 : currentYear;
+    const season =
+      currentMonth >= 11 || currentMonth <= 2 ? currentYear - 1 : currentYear;
 
     // Rough season start (adjust if needed)
     const seasonStart = new Date(`${season}-03-01T00:00:00Z`);
 
-    // Build weekly windows (7-day slices)
+    // Align to ISO week (Monday - Sunday)
+    const firstMonday = new Date(seasonStart);
+    while (firstMonday.getUTCDay() !== 1) {
+      // getUTCDay: 0=Sun,1=Mon,... Adjust back to Monday
+      firstMonday.setUTCDate(firstMonday.getUTCDate() - 1);
+    }
+
+    // Build ISO weekly windows
     const weeks: { start: Date; end: Date }[] = [];
-    let start = new Date(seasonStart);
+    let start = new Date(firstMonday);
     while (start <= currentDate) {
       const end = new Date(start);
-      end.setDate(end.getDate() + 6);
+      end.setUTCDate(end.getUTCDate() + 6);
       if (end > currentDate) end.setTime(currentDate.getTime());
       weeks.push({ start: new Date(start), end });
       start = new Date(end);
-      start.setDate(start.getDate() + 1);
+      start.setUTCDate(start.getUTCDate() + 1);
     }
 
     // Map of playerId -> data
-    const players = new Map<number, Omit<PlayerWeekData, "id" | "totalPoints"> & { totalPoints: number }>(); // isRostered managed later
+    const players = new Map<
+      number,
+      Omit<PlayerWeekData, "id" | "totalPoints"> & { totalPoints: number }
+    >(); // isRostered managed later
 
     // Helper to fetch stats for a week
-    async function fetchSplits(group: string, startDate: string, endDate: string): Promise<any[]> {
-      const res = await fetch(`https://statsapi.mlb.com/api/v1/stats?stats=byDateRange&startDate=${startDate}&endDate=${endDate}&group=${group}&limit=1000`);
+    async function fetchSplits(
+      group: string,
+      startDate: string,
+      endDate: string
+    ): Promise<any[]> {
+      const res = await fetch(
+        `https://statsapi.mlb.com/api/v1/stats?stats=byDateRange&startDate=${startDate}&endDate=${endDate}&group=${group}&limit=1000`
+      );
       if (!res.ok) throw new Error(`Failed fetch ${group} ${startDate}`);
       const json = await res.json();
       return json?.stats?.[0]?.splits ?? [];
@@ -59,7 +76,8 @@ export async function GET() {
 
       // Process batting
       hittingSplits.forEach((split: any) => {
-        if (!split.player || !split.stat || split.stat.gamesPlayed === 0) return;
+        if (!split.player || !split.stat || split.stat.gamesPlayed === 0)
+          return;
         const pts = calculateBattingPoints({
           ...split.stat,
           walks: split.stat.baseOnBalls,
@@ -83,7 +101,8 @@ export async function GET() {
 
       // Process pitching
       pitchingSplits.forEach((split: any) => {
-        if (!split.player || !split.stat || split.stat.gamesPlayed === 0) return;
+        if (!split.player || !split.stat || split.stat.gamesPlayed === 0)
+          return;
         const pts = calculatePitchingPoints({
           ...split.stat,
           pitchingStrikeouts: split.stat.strikeOuts,
@@ -108,25 +127,33 @@ export async function GET() {
     }
 
     // Shape response
-    const response: PlayerWeekData[] = Array.from(players.entries()).map(([id, p]) => ({
-      id,
-      fullName: p.fullName,
-      teamName: p.teamName,
-      positionAbbr: p.positionAbbr,
-      weeklyPoints: p.weeklyPoints,
-      totalPoints: p.totalPoints,
-      isRostered: false, // placeholder, will fill later
-    }));
+    const response: PlayerWeekData[] = Array.from(players.entries()).map(
+      ([id, p]) => ({
+        id,
+        fullName: p.fullName,
+        teamName: p.teamName,
+        positionAbbr: p.positionAbbr,
+        weeklyPoints: p.weeklyPoints,
+        totalPoints: p.totalPoints,
+        isRostered: false, // placeholder, will fill later
+      })
+    );
 
     // Fetch rostered player names from ESPN if env vars present
     const swid = process.env.SWID;
     const espnS2 = process.env.ESPN_S2;
     const leagueId = process.env.ESPN_LEAGUE_ID;
-    const seasonOverride = process.env.ESPN_SEASON ? parseInt(process.env.ESPN_SEASON, 10) : undefined;
-    const segmentOverride = process.env.ESPN_SEGMENT ? parseInt(process.env.ESPN_SEGMENT, 10) : 0;
+    const seasonOverride = process.env.ESPN_SEASON
+      ? parseInt(process.env.ESPN_SEASON, 10)
+      : undefined;
+    const segmentOverride = process.env.ESPN_SEGMENT
+      ? parseInt(process.env.ESPN_SEGMENT, 10)
+      : 0;
     if (swid && espnS2 && leagueId) {
       try {
-        const { ESPNFantasyService } = await import("@/lib/espn/ESPNFantasyService");
+        const { ESPNFantasyService } = await import(
+          "@/lib/espn/ESPNFantasyService"
+        );
         const service = new ESPNFantasyService(swid, espnS2);
         const rosterNames = await service.fetchRosteredPlayerNames(
           leagueId,
