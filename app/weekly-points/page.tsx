@@ -1,93 +1,40 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { Suspense, useCallback, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { VariableSizeList as List } from "react-window";
 import AutoSizer from "react-virtualized-auto-sizer";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  ResponsiveContainer,
-  CartesianGrid,
-} from "recharts";
 
-interface PlayerWeekly {
-  id: number;
-  fullName: string;
-  teamName: string;
-  positionAbbr: string;
-  weeklyPoints: number[];
-  totalPoints: number;
-  isRostered: boolean;
-}
+import PlayerRow from "@/src/presentation/weeklyPoints/PlayerRow";
+import { useWeeklyPoints } from "@/src/presentation/weeklyPoints/useWeeklyPoints";
+import { defaultDisplayPointsStrategy } from "@/src/presentation/weeklyPoints/displayPointsStrategy";
 
-export default function WeeklyPointsPage() {
-  const [players, setPlayers] = useState<PlayerWeekly[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [globalMax, setGlobalMax] = useState<number>(0);
-  const [lastWeekIndex, setLastWeekIndex] = useState<number>(-1);
-  const [searchTerm, setSearchTerm] = useState("");
-
+function WeeklyPointsContent() {
   const searchParams = useSearchParams();
+  const seasonParam = searchParams.get("season");
+  const season =
+    seasonParam && !Number.isNaN(Number(seasonParam))
+      ? Number(seasonParam)
+      : undefined;
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // If the caller supplied ?season=YYYY use that; otherwise fall back to
-        // the simple calendar-year heuristic.
-        const seasonParam = searchParams.get("season");
-        let ses: number;
-        if (seasonParam && !Number.isNaN(parseInt(seasonParam, 10))) {
-          ses = parseInt(seasonParam, 10);
-        } else {
-          const year = new Date().getFullYear();
-          ses = new Date().getMonth() + 1 <= 2 ? year - 1 : year;
-        }
+  const { players, loading, error, lastWeekIdx, globalMax } =
+    useWeeklyPoints(season);
 
-        const res = await fetch(`/api/weekly-points?season=${ses}`);
-        if (!res.ok) throw new Error("Request failed");
-        const json: PlayerWeekly[] = await res.json();
+  const [searchTerm, setSearchTerm] = useState("");
+  const filtered = useMemo(() => {
+    const term = searchTerm.toLowerCase();
+    return players.filter((p) => p.fullName.toLowerCase().includes(term));
+  }, [players, searchTerm]);
 
-        // Determine index of the most recently *completed* ISO week.
-        // The API always includes an entry for the current (still in-progress)
-        // Monday-Sunday span at the *end* of the weeklyPoints array, so the
-        // last finished week is always the one *before* the last.
-        const weekCount = json.length > 0 ? json[0].weeklyPoints.length : 0;
-        const lastCompleteWeekIndex = Math.max(0, weekCount - 2);
-        setLastWeekIndex(lastCompleteWeekIndex);
-
-        // Sort by total points in last complete week descending
-        json.sort(
-          (a, b) =>
-            (b.weeklyPoints[lastCompleteWeekIndex] || 0) -
-            (a.weeklyPoints[lastCompleteWeekIndex] || 0)
-        );
-
-        setPlayers(json);
-
-        const max = Math.max(0, ...json.flatMap((p) => p.weeklyPoints));
-        setGlobalMax(max);
-      } catch (e: any) {
-        setError(e.message || "Unknown error");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
-
-  // Filter players by search term (case-insensitive substring match)
-  const filteredPlayers = players.filter((p) =>
-    p.fullName.toLowerCase().includes(searchTerm.toLowerCase())
+  const getItemSize = useCallback(
+    (index: number) => (index === 0 ? 120 : 80),
+    []
   );
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        Loading weekly points...
+        Loading weekly points…
       </div>
     );
   }
@@ -100,96 +47,8 @@ export default function WeeklyPointsPage() {
     );
   }
 
-  const Row = ({
-    index,
-    style,
-  }: {
-    index: number;
-    style: React.CSSProperties;
-  }) => {
-    if (index === 0) {
-      return (
-        <div
-          style={style}
-          className="px-2 py-2 text-sm text-slate-600 leading-snug"
-        >
-          Names shown in{" "}
-          <span className="text-green-700 font-semibold">green</span> are
-          currently on our waiver wire. The value displayed next to each player
-          is their total fantasy points for the most recently completed ISO
-          week. Vertical dashed lines in the mini-chart mark ISO week
-          boundaries. Click any row to open that player’s Baseball Savant page.
-        </div>
-      );
-    }
-
-    const player = filteredPlayers[index - 1];
-    const chartData = player.weeklyPoints.map((p, i) => ({
-      week: i + 1,
-      pts: p,
-    }));
-    const lastWeekPts =
-      lastWeekIndex >= 0 ? player.weeklyPoints[lastWeekIndex] || 0 : 0;
-
-    const nameClasses = `truncate text-sm font-medium flex items-center gap-2 ${
-      player.isRostered ? "" : "text-green-700 font-semibold"
-    }`;
-
-    const savantUrl = `https://baseballsavant.mlb.com/savant-player/${player.id}`;
-
-    return (
-      <a
-        href={savantUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        style={style}
-        className="flex items-center gap-2 border-b border-slate-200 px-2 hover:bg-slate-50"
-        key={player.id}
-      >
-        <div className={`w-48 ${nameClasses}`}>
-          <span>{player.fullName}</span>
-          {lastWeekIndex >= 0 && (
-            <span className="text-xs text-slate-500">
-              {Math.round(lastWeekPts)} pts
-            </span>
-          )}
-        </div>
-        <div className="flex-1 h-16">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart
-              data={chartData}
-              margin={{ left: 0, right: 0, top: 5, bottom: 5 }}
-            >
-              <CartesianGrid
-                strokeDasharray="3 3"
-                vertical={true}
-                horizontal={false}
-              />
-              <Line
-                type="monotone"
-                dataKey="pts"
-                stroke="#2563eb"
-                strokeWidth={2}
-                dot={false}
-              />
-              <XAxis dataKey="week" hide />
-              <YAxis
-                type="number"
-                domain={[0, globalMax || 1]}
-                ticks={[0, globalMax || 1]}
-                tick={{ fontSize: 10 }}
-                width={30}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </a>
-    );
-  };
-
   return (
     <main className="container mx-auto px-4 py-6">
-      {/* Back Button */}
       <div className="mb-4">
         <a
           href="/"
@@ -201,13 +60,12 @@ export default function WeeklyPointsPage() {
 
       <h1 className="text-2xl font-bold mb-4">Weekly Fantasy Points</h1>
 
-      {/* Search Input */}
       <div className="mb-4">
         <input
           type="text"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Search player..."
+          placeholder="Search player…"
           className="w-full md:w-1/2 px-3 py-2 border border-slate-300 rounded"
         />
       </div>
@@ -218,14 +76,51 @@ export default function WeeklyPointsPage() {
             <List
               height={height}
               width={width}
-              itemCount={filteredPlayers.length + 1 /* +1 for description */}
-              itemSize={(index) => (index === 0 ? 120 : 80)}
+              itemCount={filtered.length + 1}
+              itemSize={getItemSize}
             >
-              {Row}
+              {({ index, style }) =>
+                index === 0 ? (
+                  <div
+                    style={style}
+                    className="px-2 py-2 text-sm text-slate-600 leading-snug"
+                  >
+                    Names shown in{" "}
+                    <span className="text-green-700 font-semibold">green</span>{" "}
+                    are currently on our waiver wire. The value displayed next
+                    to each player is their total fantasy points for the most
+                    recently completed ISO week. Vertical dashed lines in the
+                    mini-chart mark ISO week boundaries. Click any row to open
+                    that player’s Baseball Savant page.
+                  </div>
+                ) : (
+                  <PlayerRow
+                    player={filtered[index - 1]}
+                    lastWeekIdx={lastWeekIdx}
+                    globalMax={globalMax}
+                    style={style}
+                    displayPoints={defaultDisplayPointsStrategy}
+                  />
+                )
+              }
             </List>
           )}
         </AutoSizer>
       </div>
     </main>
+  );
+}
+
+export default function WeeklyPointsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-screen">
+          Loading weekly points…
+        </div>
+      }
+    >
+      <WeeklyPointsContent />
+    </Suspense>
   );
 } 

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { calculateBattingPoints, calculatePitchingPoints } from "@/lib/mlb/points";
 
+export const dynamic = "force-dynamic";
+
 interface PlayerWeekData {
   id: number;
   fullName: string;
