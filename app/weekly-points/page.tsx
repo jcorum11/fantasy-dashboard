@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { VariableSizeList as List } from "react-window";
 import AutoSizer from "react-virtualized-auto-sizer";
 import {
@@ -28,27 +29,42 @@ export default function WeeklyPointsPage() {
   const [error, setError] = useState<string | null>(null);
   const [globalMax, setGlobalMax] = useState<number>(0);
   const [lastWeekIndex, setLastWeekIndex] = useState<number>(-1);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch("/api/weekly-points");
+        // If the caller supplied ?season=YYYY use that; otherwise fall back to
+        // the simple calendar-year heuristic.
+        const seasonParam = searchParams.get("season");
+        let ses: number;
+        if (seasonParam && !Number.isNaN(parseInt(seasonParam, 10))) {
+          ses = parseInt(seasonParam, 10);
+        } else {
+          const year = new Date().getFullYear();
+          ses = new Date().getMonth() + 1 <= 2 ? year - 1 : year;
+        }
+
+        const res = await fetch(`/api/weekly-points?season=${ses}`);
         if (!res.ok) throw new Error("Request failed");
         const json: PlayerWeekly[] = await res.json();
 
-        // Determine last completed ISO week index
-        const getIsoDay = (d: Date) => {
-          const day = d.getDay(); // 0-6 Sun-Sat
-          return day === 0 ? 7 : day; // convert to 1-7 Mon-Sun
-        };
-        const isoDayToday = getIsoDay(new Date());
-
+        // Determine index of the most recently *completed* ISO week.
+        // The API always includes an entry for the current (still in-progress)
+        // Monday-Sunday span at the *end* of the weeklyPoints array, so the
+        // last finished week is always the one *before* the last.
         const weekCount = json.length > 0 ? json[0].weeklyPoints.length : 0;
-        const lastCompleteWeekIndex = isoDayToday === 7 ? weekCount - 1 : weekCount - 2;
+        const lastCompleteWeekIndex = Math.max(0, weekCount - 2);
         setLastWeekIndex(lastCompleteWeekIndex);
 
         // Sort by total points in last complete week descending
-        json.sort((a, b) => (b.weeklyPoints[lastCompleteWeekIndex] || 0) - (a.weeklyPoints[lastCompleteWeekIndex] || 0));
+        json.sort(
+          (a, b) =>
+            (b.weeklyPoints[lastCompleteWeekIndex] || 0) -
+            (a.weeklyPoints[lastCompleteWeekIndex] || 0)
+        );
 
         setPlayers(json);
 
@@ -62,6 +78,11 @@ export default function WeeklyPointsPage() {
     };
     fetchData();
   }, []);
+
+  // Filter players by search term (case-insensitive substring match)
+  const filteredPlayers = players.filter((p) =>
+    p.fullName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   if (loading) {
     return (
@@ -79,7 +100,13 @@ export default function WeeklyPointsPage() {
     );
   }
 
-  const Row = ({ index, style }: { index: number; style: React.CSSProperties }) => {
+  const Row = ({
+    index,
+    style,
+  }: {
+    index: number;
+    style: React.CSSProperties;
+  }) => {
     if (index === 0) {
       return (
         <div
@@ -96,9 +123,13 @@ export default function WeeklyPointsPage() {
       );
     }
 
-    const player = players[index - 1];
-    const chartData = player.weeklyPoints.map((p, i) => ({ week: i + 1, pts: p }));
-    const lastWeekPts = lastWeekIndex >= 0 ? player.weeklyPoints[lastWeekIndex] || 0 : 0;
+    const player = filteredPlayers[index - 1];
+    const chartData = player.weeklyPoints.map((p, i) => ({
+      week: i + 1,
+      pts: p,
+    }));
+    const lastWeekPts =
+      lastWeekIndex >= 0 ? player.weeklyPoints[lastWeekIndex] || 0 : 0;
 
     const nameClasses = `truncate text-sm font-medium flex items-center gap-2 ${
       player.isRostered ? "" : "text-green-700 font-semibold"
@@ -170,13 +201,24 @@ export default function WeeklyPointsPage() {
 
       <h1 className="text-2xl font-bold mb-4">Weekly Fantasy Points</h1>
 
+      {/* Search Input */}
+      <div className="mb-4">
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Search player..."
+          className="w-full md:w-1/2 px-3 py-2 border border-slate-300 rounded"
+        />
+      </div>
+
       <div style={{ height: "80vh" }}>
         <AutoSizer>
           {({ height, width }: { height: number; width: number }) => (
             <List
               height={height}
               width={width}
-              itemCount={players.length + 1 /* +1 for description */}
+              itemCount={filteredPlayers.length + 1 /* +1 for description */}
               itemSize={(index) => (index === 0 ? 120 : 80)}
             >
               {Row}

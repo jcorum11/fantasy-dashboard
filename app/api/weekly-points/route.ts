@@ -11,14 +11,53 @@ interface PlayerWeekData {
   isRostered: boolean; // NEW
 }
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    // Determine the relevant MLB season
-    const currentDate = new Date();
+    // --------------------------------------------------------------------
+    // 1. Parse query-params
+    //    • ?season=YYYY → forces which MLB season to use
+    //    • ?endDate=YYYY-MM-DD → forces the *latest* date to include when
+    //      building ISO-week ranges (useful when the host clock is behind)
+    // --------------------------------------------------------------------
+    const url = new URL(req.url);
+
+    const seasonParam = url.searchParams.get("season");
+    const endDateParam = url.searchParams.get("endDate");
+
+    // Pick the base "today" date first so everything consistently derives
+    // from this value.
+    let currentDate = endDateParam ? new Date(endDateParam) : new Date();
+
+    // If the caller asked for a *future* season (e.g., 2025 while the host
+    // machine is still on 2024) and they did NOT also specify an explicit
+    // endDate, bump the year component forward so that we actually include
+    // games from that season up to the same month/day.
+    if (!endDateParam && seasonParam) {
+      const forcedSeason = parseInt(seasonParam, 10);
+      if (
+        !Number.isNaN(forcedSeason) &&
+        forcedSeason > currentDate.getFullYear()
+      ) {
+        const m = currentDate.getMonth();
+        // Preserve local time-zone components.
+        currentDate = new Date(currentDate);
+        currentDate.setFullYear(forcedSeason);
+        // Handle 29 Feb → 28 Feb in non-leap years, etc.
+        if (currentDate.getMonth() !== m) {
+          currentDate.setDate(0); // roll back to last day previous month
+        }
+      }
+    }
+
+    // Now that currentDate is final, derive the season if one wasn't forced
+    // explicitly. "Season" runs roughly March-Oct, so Nov–Feb belong to the
+    // *following* calendar year.
     const currentYear = currentDate.getFullYear();
     const currentMonth = currentDate.getMonth() + 1; // 1-12
-    const season =
+    const inferredSeason =
       currentMonth >= 11 || currentMonth <= 2 ? currentYear - 1 : currentYear;
+
+    const season = seasonParam ? parseInt(seasonParam, 10) : inferredSeason;
 
     // Rough season start (adjust if needed)
     const seasonStart = new Date(`${season}-03-01T00:00:00Z`);
@@ -52,10 +91,11 @@ export async function GET() {
     async function fetchSplits(
       group: string,
       startDate: string,
-      endDate: string
+      endDate: string,
+      season: number
     ): Promise<any[]> {
       const res = await fetch(
-        `https://statsapi.mlb.com/api/v1/stats?stats=byDateRange&startDate=${startDate}&endDate=${endDate}&group=${group}&limit=1000`
+        `https://statsapi.mlb.com/api/v1/stats?stats=byDateRange&startDate=${startDate}&endDate=${endDate}&group=${group}&season=${season}&limit=5000`
       );
       if (!res.ok) throw new Error(`Failed fetch ${group} ${startDate}`);
       const json = await res.json();
@@ -70,8 +110,8 @@ export async function GET() {
 
       // Fetch hitting & pitching concurrently
       const [hittingSplits, pitchingSplits] = await Promise.all([
-        fetchSplits("hitting", startDate, endDate),
-        fetchSplits("pitching", startDate, endDate),
+        fetchSplits("hitting", startDate, endDate, season),
+        fetchSplits("pitching", startDate, endDate, season),
       ]);
 
       // Process batting
@@ -160,13 +200,6 @@ export async function GET() {
           seasonOverride ?? season,
           segmentOverride
         );
-        console.log("Roster names fetched: ", rawRosterNames.size);
-        if (rawRosterNames.size > 0) {
-          console.log(
-            "Sample names: ",
-            Array.from(rawRosterNames).slice(0, 10)
-          );
-        }
         // Helper to normalize names (remove diacritics, lowercase)
         const normalize = (str: string) =>
           str
@@ -194,6 +227,9 @@ export async function GET() {
     return NextResponse.json(response);
   } catch (error: any) {
     console.error("Weekly points error: ", error);
-    return NextResponse.json({ error: "Failed to fetch weekly points" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch weekly points" },
+      { status: 500 }
+    );
   }
 } 
