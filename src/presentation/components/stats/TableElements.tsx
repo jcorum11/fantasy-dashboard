@@ -55,17 +55,23 @@ export function TableCell({
 interface PlayerNameCellProps {
   name: string;
   team: string;
+  isRostered?: boolean;
   className?: string;
 }
 
 export function PlayerNameCell({
   name,
   team,
+  isRostered = true,
   className = "",
 }: PlayerNameCellProps) {
+  const nameColorClass = isRostered
+    ? "text-slate-900"
+    : "text-green-700 font-semibold";
+
   return (
     <td
-      className={`px-4 py-2 text-sm font-medium text-slate-900 whitespace-nowrap ${className}`}
+      className={`px-4 py-2 text-sm whitespace-nowrap ${nameColorClass} ${className}`}
     >
       <span className="font-semibold text-base">{name}</span>{" "}
       <span className="text-xs text-slate-500 align-middle font-semibold uppercase">

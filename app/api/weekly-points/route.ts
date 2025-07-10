@@ -155,18 +155,31 @@ export async function GET() {
           "@/lib/espn/ESPNFantasyService"
         );
         const service = new ESPNFantasyService(swid, espnS2);
-        const rosterNames = await service.fetchRosteredPlayerNames(
+        const rawRosterNames = await service.fetchRosteredPlayerNames(
           leagueId,
           seasonOverride ?? season,
           segmentOverride
         );
-        console.log("Roster names fetched: ", rosterNames.size);
-        if (rosterNames.size > 0) {
-          console.log("Sample names: ", Array.from(rosterNames).slice(0, 10));
+        console.log("Roster names fetched: ", rawRosterNames.size);
+        if (rawRosterNames.size > 0) {
+          console.log(
+            "Sample names: ",
+            Array.from(rawRosterNames).slice(0, 10)
+          );
         }
-        // Update roster flags
+        // Helper to normalize names (remove diacritics, lowercase)
+        const normalize = (str: string) =>
+          str
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "");
+
+        const rosterNames = new Set<string>();
+        rawRosterNames.forEach((n) => rosterNames.add(normalize(n)));
+
+        // Update roster flags using normalized comparison
         response.forEach((player) => {
-          if (rosterNames.has(player.fullName.toLowerCase())) {
+          if (rosterNames.has(normalize(player.fullName))) {
             player.isRostered = true;
           }
         });

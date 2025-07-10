@@ -82,9 +82,16 @@ export default function WeeklyPointsPage() {
   const Row = ({ index, style }: { index: number; style: React.CSSProperties }) => {
     if (index === 0) {
       return (
-        <div style={style} className="px-2 py-2 text-sm text-slate-600 leading-snug">
-          Names shown in <span className="text-green-700 font-semibold">green</span> are currently on our waiver wire. The value displayed next to each
-          player is their total fantasy points for the most recently completed ISO week. Vertical dashed lines in the mini-chart mark ISO week boundaries.
+        <div
+          style={style}
+          className="px-2 py-2 text-sm text-slate-600 leading-snug"
+        >
+          Names shown in{" "}
+          <span className="text-green-700 font-semibold">green</span> are
+          currently on our waiver wire. The value displayed next to each player
+          is their total fantasy points for the most recently completed ISO
+          week. Vertical dashed lines in the mini-chart mark ISO week
+          boundaries. Click any row to open that player’s Baseball Savant page.
         </div>
       );
     }
@@ -97,22 +104,36 @@ export default function WeeklyPointsPage() {
       player.isRostered ? "" : "text-green-700 font-semibold"
     }`;
 
+    const savantUrl = `https://baseballsavant.mlb.com/savant-player/${player.id}`;
+
     return (
-      <div
+      <a
+        href={savantUrl}
+        target="_blank"
+        rel="noopener noreferrer"
         style={style}
-        className="flex items-center gap-2 border-b border-slate-200 px-2"
+        className="flex items-center gap-2 border-b border-slate-200 px-2 hover:bg-slate-50"
         key={player.id}
       >
         <div className={`w-48 ${nameClasses}`}>
           <span>{player.fullName}</span>
           {lastWeekIndex >= 0 && (
-            <span className="text-xs text-slate-500">{Math.round(lastWeekPts)} pts</span>
+            <span className="text-xs text-slate-500">
+              {Math.round(lastWeekPts)} pts
+            </span>
           )}
         </div>
         <div className="flex-1 h-16">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} margin={{ left: 0, right: 0, top: 5, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={true} horizontal={false} />
+            <LineChart
+              data={chartData}
+              margin={{ left: 0, right: 0, top: 5, bottom: 5 }}
+            >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                vertical={true}
+                horizontal={false}
+              />
               <Line
                 type="monotone"
                 dataKey="pts"
@@ -131,7 +152,7 @@ export default function WeeklyPointsPage() {
             </LineChart>
           </ResponsiveContainer>
         </div>
-      </div>
+      </a>
     );
   };
 

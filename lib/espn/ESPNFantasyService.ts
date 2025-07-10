@@ -84,8 +84,6 @@ export class ESPNFantasyService {
       }
     }
 
-    console.log(`Fetched ${names.size} rostered player names from ESPN`);
-
     return names;
   }
 } 

@@ -38,45 +38,52 @@ export function BattingStatsTable({ stats }: BattingStatsTableProps) {
           </tr>
         </thead>
         <tbody>
-          {stats.map((player) => (
-            <tr
-              key={`${player.id}-${player.team}-${player.opponentTeam}-${player.position}-${player.isPositionPlayerPitching}`}
-              className="border-b border-slate-200 hover:bg-slate-50"
-            >
-              <PlayerNameCell
-                name={player.name}
-                team={player.team}
-                className="sticky left-0 z-10 bg-white hover:bg-slate-50 border-r border-slate-200 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]"
-              />
-              <PointsCell
-                points={player.points}
-                formatPoints={formatPoints}
-                getPointsClass={getPointsClass}
-                getPointsBg={getPointsBg}
-              />
-              <TableCell>
-                {!player.isHomeTeam ? "@" : ""}
-                {player.opponentTeam}
-              </TableCell>
-              <TableCell className="font-semibold uppercase text-blue-700">
-                {player.position}
-              </TableCell>
-              <TableCell align="right">{player.battingStats.atBats}</TableCell>
-              <TableCell align="right">{player.battingStats.hits}</TableCell>
-              <TableCell align="right">
-                {player.battingStats.homeRuns}
-              </TableCell>
-              <TableCell align="right">{player.battingStats.rbi}</TableCell>
-              <TableCell align="right">{player.battingStats.runs}</TableCell>
-              <TableCell align="right">
-                {player.battingStats.stolenBases}
-              </TableCell>
-              <TableCell align="right">{player.battingStats.walks}</TableCell>
-              <TableCell align="right">
-                {player.battingStats.strikeouts}
-              </TableCell>
-            </tr>
-          ))}
+          {stats.map((player) => {
+            const savantUrl = `https://baseballsavant.mlb.com/savant-player/${player.id}`;
+            return (
+              <tr
+                key={`${player.id}-${player.team}-${player.opponentTeam}-${player.position}-${player.isPositionPlayerPitching}`}
+                className="border-b border-slate-200 hover:bg-slate-50 cursor-pointer"
+                onClick={() => window.open(savantUrl, "_blank")}
+              >
+                <PlayerNameCell
+                  name={player.name}
+                  team={player.team}
+                  isRostered={(player as any).isRostered}
+                  className="sticky left-0 z-10 bg-white hover:bg-slate-50 border-r border-slate-200 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]"
+                />
+                <PointsCell
+                  points={player.points}
+                  formatPoints={formatPoints}
+                  getPointsClass={getPointsClass}
+                  getPointsBg={getPointsBg}
+                />
+                <TableCell>
+                  {!player.isHomeTeam ? "@" : ""}
+                  {player.opponentTeam}
+                </TableCell>
+                <TableCell className="font-semibold uppercase text-blue-700">
+                  {player.position}
+                </TableCell>
+                <TableCell align="right">
+                  {player.battingStats.atBats}
+                </TableCell>
+                <TableCell align="right">{player.battingStats.hits}</TableCell>
+                <TableCell align="right">
+                  {player.battingStats.homeRuns}
+                </TableCell>
+                <TableCell align="right">{player.battingStats.rbi}</TableCell>
+                <TableCell align="right">{player.battingStats.runs}</TableCell>
+                <TableCell align="right">
+                  {player.battingStats.stolenBases}
+                </TableCell>
+                <TableCell align="right">{player.battingStats.walks}</TableCell>
+                <TableCell align="right">
+                  {player.battingStats.strikeouts}
+                </TableCell>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

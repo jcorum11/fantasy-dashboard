@@ -25,17 +25,46 @@ export default function Home() {
 
     try {
       const formattedDate = format(date, "yyyy-MM-dd");
-      const response = await playerStatsClient.getPlayerStats(formattedDate);
+      // Fetch player stats and roster info in parallel
+      const [statsResp, waiverResp] = await Promise.all([
+        playerStatsClient.getPlayerStats(formattedDate),
+        fetch("/api/weekly-points", { cache: "no-store" }),
+      ]);
 
-      if (response.error) {
-        setMessage(response.error);
+      // Handle errors from stats endpoint
+      if (statsResp.error) {
+        setMessage(statsResp.error);
         setStats([]);
       } else {
-        const statsArray = Array.isArray(response.stats) ? response.stats : [];
-        setStats(statsArray);
+        const statsArray = Array.isArray(statsResp.stats)
+          ? statsResp.stats
+          : [];
+
+        // Build rostered ID set based on weekly-points response
+        let rosteredIds = new Set<number>();
+        try {
+          if (waiverResp.ok) {
+            const waiverData: any[] = await waiverResp.json();
+            rosteredIds = new Set(
+              waiverData
+                .filter((p: any) => p.isRostered)
+                .map((p: any) => p.id as number)
+            );
+          }
+        } catch {
+          /* ignore roster fetch issues */
+        }
+
+        // Annotate stats with roster flag using ID lookup
+        const annotatedStats = statsArray.map((p: any) => ({
+          ...p,
+          isRostered: rosteredIds.has(p.id),
+        }));
+
+        setStats(annotatedStats);
 
         // If no stats are available, show the game availability message
-        if (statsArray.length === 0) {
+        if (annotatedStats.length === 0) {
           setMessage(getGameAvailabilityMessage(formattedDate));
         }
       }
@@ -115,7 +144,15 @@ export default function Home() {
       <StatsStatus isLoading={isLoading} message={message} />
 
       {!isLoading && !message && (
-        <StatsTable stats={dedupedFilteredStats} viewType={viewType} />
+        <>
+          <p className="mb-4 text-sm text-slate-600 leading-snug">
+            Names shown in{" "}
+            <span className="text-green-700 font-semibold">green</span> are
+            currently on our waiver wire. Click any row to open the
+            corresponding player’s Baseball Savant page.
+          </p>
+          <StatsTable stats={dedupedFilteredStats} viewType={viewType} />
+        </>
       )}
     </main>
   );

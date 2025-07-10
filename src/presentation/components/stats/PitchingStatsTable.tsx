@@ -39,64 +39,69 @@ export function PitchingStatsTable({ stats }: PitchingStatsTableProps) {
           </tr>
         </thead>
         <tbody>
-          {stats.map((player) => (
-            <tr
-              key={`${player.id}-${player.team}-${player.opponentTeam}-${player.position}-${player.isPositionPlayerPitching}`}
-              className="border-b border-slate-200 hover:bg-slate-50"
-            >
-              <PlayerNameCell
-                name={player.name}
-                team={player.team}
-                className="sticky left-0 z-10 bg-white hover:bg-slate-50 border-r border-slate-200 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]"
-              />
-              <PointsCell
-                points={player.points}
-                formatPoints={formatPoints}
-                getPointsClass={getPointsClass}
-                getPointsBg={getPointsBg}
-              />
-              <TableCell>
-                {!player.isHomeTeam ? "@" : ""}
-                {player.opponentTeam}
-              </TableCell>
-              <TableCell
-                className={`font-semibold uppercase ${
-                  player.pitchingStats.gamesStarted > 0
-                    ? "text-indigo-700"
-                    : "text-emerald-700"
-                }`}
+          {stats.map((player) => {
+            const savantUrl = `https://baseballsavant.mlb.com/savant-player/${player.id}`;
+            return (
+              <tr
+                key={`${player.id}-${player.team}-${player.opponentTeam}-${player.position}-${player.isPositionPlayerPitching}`}
+                className="border-b border-slate-200 hover:bg-slate-50 cursor-pointer"
+                onClick={() => window.open(savantUrl, "_blank")}
               >
-                {player.pitchingStats.gamesStarted > 0 ? "SP" : "RP"}
-              </TableCell>
-              <TableCell align="right" className="text-slate-600">
-                {player.pitchingStats.inningsPitched}
-              </TableCell>
-              <TableCell align="right" className="text-slate-600">
-                {player.pitchingStats.earnedRuns}
-              </TableCell>
-              <TableCell align="right" className="text-slate-600">
-                {player.pitchingStats.pitchingStrikeouts}
-              </TableCell>
-              <TableCell align="right" className="text-slate-600">
-                {player.pitchingStats.hitsAllowed}
-              </TableCell>
-              <TableCell align="right" className="text-slate-600">
-                {player.pitchingStats.walksIssued}
-              </TableCell>
-              <TableCell align="right" className="text-slate-600">
-                {player.pitchingStats.wins}
-              </TableCell>
-              <TableCell align="right" className="text-slate-600">
-                {player.pitchingStats.losses}
-              </TableCell>
-              <TableCell align="right" className="text-slate-600">
-                {player.pitchingStats.saves}
-              </TableCell>
-              <TableCell align="right" className="text-slate-600">
-                {player.pitchingStats.holds ?? "-"}
-              </TableCell>
-            </tr>
-          ))}
+                <PlayerNameCell
+                  name={player.name}
+                  team={player.team}
+                  isRostered={(player as any).isRostered}
+                  className="sticky left-0 z-10 bg-white hover:bg-slate-50 border-r border-slate-200 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]"
+                />
+                <PointsCell
+                  points={player.points}
+                  formatPoints={formatPoints}
+                  getPointsClass={getPointsClass}
+                  getPointsBg={getPointsBg}
+                />
+                <TableCell>
+                  {!player.isHomeTeam ? "@" : ""}
+                  {player.opponentTeam}
+                </TableCell>
+                <TableCell
+                  className={`font-semibold uppercase ${
+                    player.pitchingStats.gamesStarted > 0
+                      ? "text-indigo-700"
+                      : "text-emerald-700"
+                  }`}
+                >
+                  {player.pitchingStats.gamesStarted > 0 ? "SP" : "RP"}
+                </TableCell>
+                <TableCell align="right" className="text-slate-600">
+                  {player.pitchingStats.inningsPitched}
+                </TableCell>
+                <TableCell align="right" className="text-slate-600">
+                  {player.pitchingStats.earnedRuns}
+                </TableCell>
+                <TableCell align="right" className="text-slate-600">
+                  {player.pitchingStats.pitchingStrikeouts}
+                </TableCell>
+                <TableCell align="right" className="text-slate-600">
+                  {player.pitchingStats.hitsAllowed}
+                </TableCell>
+                <TableCell align="right" className="text-slate-600">
+                  {player.pitchingStats.walksIssued}
+                </TableCell>
+                <TableCell align="right" className="text-slate-600">
+                  {player.pitchingStats.wins}
+                </TableCell>
+                <TableCell align="right" className="text-slate-600">
+                  {player.pitchingStats.losses}
+                </TableCell>
+                <TableCell align="right" className="text-slate-600">
+                  {player.pitchingStats.saves}
+                </TableCell>
+                <TableCell align="right" className="text-slate-600">
+                  {player.pitchingStats.holds ?? "-"}
+                </TableCell>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
