@@ -31,7 +31,13 @@ export function useWeeklyPoints(seasonParam?: number) {
           idx -= 1;
         }
 
-        setPlayers(json);
+        // Sort players by their points for the most-recently-completed week so
+        // the UI always renders highest-scoring players first.
+        const sorted = [...json].sort(
+          (a, b) => (b.weeklyPoints[idx] ?? 0) - (a.weeklyPoints[idx] ?? 0)
+        );
+
+        setPlayers(sorted);
         setLastWeekIdx(idx);
         setGlobalMax(Math.max(0, ...json.flatMap((p) => p.weeklyPoints)));
       } catch (e: any) {
