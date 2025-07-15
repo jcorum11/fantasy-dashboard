@@ -4,7 +4,7 @@ A **Next.js 14 + TypeScript** web app that pulls daily MLB player data and visua
 
 [Live Demo →](https://fantasy-dashboard-phi.vercel.app)
 
-[Video Demo →](https://www.loom.com/share/06fd3adc246d4eaa8d0170f01e1268d7]
+[Video Demo →](https://www.loom.com/share/06fd3adc246d4eaa8d0170f01e1268d7)
 
 ---
 
