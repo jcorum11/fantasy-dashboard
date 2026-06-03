@@ -114,21 +114,13 @@ describe('Yahoo', () => {
     it("returns 0 if all stats are empty", () => {
       expect(YAHOO.calculateBattingPoints({})).toBe(0)
     })
-    it("multiplies pitching outs by 1", () => {
-      expect(() => YAHOO.calculateBattingPoints({ inningsPitched: -1 })).toThrowError('inningsPitched cannot be negative')
-      expect(YAHOO.calculateBattingPoints({ inningsPitched: 0 })).toBe(0)
-      expect(YAHOO.calculateBattingPoints({ inningsPitched: 5.1 })).toBeCloseTo(16, 1)
-      expect(YAHOO.calculateBattingPoints({ inningsPitched: 5.0 })).toBeCloseTo(15, 1)
-      expect(YAHOO.calculateBattingPoints({ inningsPitched: 9 })).toBeCloseTo(27, 1)
-      expect(YAHOO.calculateBattingPoints({ inningsPitched: 10 })).toBeCloseTo(30, 1)
-    })
     it("multiplies batting runs by 1.9", () => {
       expect(() => YAHOO.calculateBattingPoints({ runs: -1 })).toThrowError("runs cannot be negative")
       expect(YAHOO.calculateBattingPoints({ runs: 0 })).toBe(0)
-      expect(YAHOO.calculateBattingPoints({ runs: 1 })).toBeCloseTo(1.9, 1)
-      expect(YAHOO.calculateBattingPoints({ runs: 5 })).toBeCloseTo(9.5, 1)
-      expect(YAHOO.calculateBattingPoints({ runs: 100 })).toBeCloseTo(190, 1)
-      expect(() => YAHOO.calculateBattingPoints({ runs: 1.2 })).toThrowError("runs must be a whole numbers")
+      expect(YAHOO.calculateBattingPoints({ runs: 1 })).toBeCloseTo(1.9, 10)
+      expect(YAHOO.calculateBattingPoints({ runs: 5 })).toBeCloseTo(9.5, 10)
+      expect(YAHOO.calculateBattingPoints({ runs: 100 })).toBeCloseTo(190, 10)
+      expect(() => YAHOO.calculateBattingPoints({ runs: 1.2 })).toThrowError("runs must be a whole number")
     })
 
     it("doesn't count strikeouts as negative", () => {
@@ -148,6 +140,18 @@ describe('Yahoo', () => {
       expect(YAHOO.calculateBattingPoints({ holds: -1 })).toBe(0)
       expect(YAHOO.calculateBattingPoints({ holds: 0 })).toBe(0)
     })
+  })
+
+  describe('calculatePitchingPoints', () => {
+    it("multiplies pitching outs by 1", () => {
+      expect(() => YAHOO.calculatePitchingPoints({ inningsPitched: "-1" })).toThrowError('inningsPitched cannot be negative')
+      expect(YAHOO.calculatePitchingPoints({ inningsPitched: "0" })).toBe(0)
+      expect(YAHOO.calculatePitchingPoints({ inningsPitched: "5.1" })).toBeCloseTo(16, 10)
+      expect(YAHOO.calculatePitchingPoints({ inningsPitched: "5.0" })).toBeCloseTo(15, 10)
+      expect(YAHOO.calculatePitchingPoints({ inningsPitched: "9" })).toBeCloseTo(27, 10)
+      expect(YAHOO.calculatePitchingPoints({ inningsPitched: "10" })).toBeCloseTo(30, 10)
+    })
+
   })
 })
 
