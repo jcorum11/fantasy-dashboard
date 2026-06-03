@@ -129,17 +129,6 @@ describe('Yahoo', () => {
       expect(YAHOO.calculateBattingPoints({ strikeouts: -1 })).toBe(0)
     })
 
-    it("doesn't count pitcher losses as negative", () => {
-      expect(YAHOO.calculateBattingPoints({ losses: 1 })).toBe(0)
-      expect(YAHOO.calculateBattingPoints({ losses: 0 })).toBe(0)
-      expect(YAHOO.calculateBattingPoints({ losses: -1 })).toBe(0)
-    })
-
-    it("doesn't count holds at all", () => {
-      expect(YAHOO.calculateBattingPoints({ holds: 1 })).toBe(0)
-      expect(YAHOO.calculateBattingPoints({ holds: -1 })).toBe(0)
-      expect(YAHOO.calculateBattingPoints({ holds: 0 })).toBe(0)
-    })
   })
 
   describe('calculatePitchingPoints', () => {
@@ -150,6 +139,18 @@ describe('Yahoo', () => {
       expect(YAHOO.calculatePitchingPoints({ inningsPitched: "5.0" })).toBeCloseTo(15, 10)
       expect(YAHOO.calculatePitchingPoints({ inningsPitched: "9" })).toBeCloseTo(27, 10)
       expect(YAHOO.calculatePitchingPoints({ inningsPitched: "10" })).toBeCloseTo(30, 10)
+    })
+
+    it("doesn't count pitcher losses as negative", () => {
+      expect(YAHOO.calculateBattingPoints({ losses: 1 })).toBe(0)
+      expect(YAHOO.calculateBattingPoints({ losses: 0 })).toBe(0)
+      expect(YAHOO.calculateBattingPoints({ losses: -1 })).toBe(0)
+    })
+
+    it("doesn't count holds at all", () => {
+      expect(YAHOO.calculateBattingPoints({ holds: 1 })).toBe(0)
+      expect(YAHOO.calculateBattingPoints({ holds: -1 })).toBe(0)
+      expect(YAHOO.calculateBattingPoints({ holds: 0 })).toBe(0)
     })
 
   })
