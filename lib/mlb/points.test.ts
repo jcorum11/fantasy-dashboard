@@ -129,6 +129,22 @@ describe('Yahoo', () => {
       expect(YAHOO.calculateBattingPoints({ strikeouts: -1 })).toBe(0)
     })
 
+    it("derives singles by subtracting extra-base hits", () => {
+      // 4 hits = 1 single + 1 double + 1 triple + 1 HR => 2.6 + 5.2 + 7.8 + 10.4
+      expect(YAHOO.calculateBattingPoints({ hits: 4, doubles: 1, triples: 1, homeRuns: 1 })).toBeCloseTo(26, 10)
+    })
+
+    it("clamps singles to zero when extra-base hits exceed hits", () => {
+      // 1 hit but 2 doubles => 0 singles + 2 * 5.2
+      expect(YAHOO.calculateBattingPoints({ hits: 1, doubles: 2 })).toBeCloseTo(10.4, 10)
+    })
+
+    it("scores a full batting line", () => {
+      // 2 singles (5.2) + double (5.2) + triple (7.8) + HR (10.4) + 2 runs (3.8)
+      // + 3 rbi (5.7) + 1 sb (4.2) + 1 bb (2.6); strikeouts ignored
+      expect(YAHOO.calculateBattingPoints({ hits: 5, doubles: 1, triples: 1, homeRuns: 1, runs: 2, rbi: 3, stolenBases: 1, walks: 1, strikeouts: 4 })).toBeCloseTo(44.9, 10)
+    })
+
   })
 
   describe('calculatePitchingPoints', () => {
@@ -142,15 +158,15 @@ describe('Yahoo', () => {
     })
 
     it("doesn't count pitcher losses as negative", () => {
-      expect(YAHOO.calculateBattingPoints({ losses: 1 })).toBe(0)
-      expect(YAHOO.calculateBattingPoints({ losses: 0 })).toBe(0)
-      expect(YAHOO.calculateBattingPoints({ losses: -1 })).toBe(0)
+      expect(YAHOO.calculatePitchingPoints({ losses: 1 })).toBe(0)
+      expect(YAHOO.calculatePitchingPoints({ losses: 0 })).toBe(0)
+      expect(YAHOO.calculatePitchingPoints({ losses: -1 })).toBe(0)
     })
 
     it("doesn't count holds at all", () => {
-      expect(YAHOO.calculateBattingPoints({ holds: 1 })).toBe(0)
-      expect(YAHOO.calculateBattingPoints({ holds: -1 })).toBe(0)
-      expect(YAHOO.calculateBattingPoints({ holds: 0 })).toBe(0)
+      expect(YAHOO.calculatePitchingPoints({ holds: 1 })).toBe(0)
+      expect(YAHOO.calculatePitchingPoints({ holds: -1 })).toBe(0)
+      expect(YAHOO.calculatePitchingPoints({ holds: 0 })).toBe(0)
     })
 
   })

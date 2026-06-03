@@ -9,6 +9,9 @@ import {
   RawBattingStats,
   RawPitchingStats,
 } from "@/lib/mlb/statsProcessing";
+// Real player batting object captured from the live MLB Stats API
+// (GET /game/746817/boxscore -> teams.*.players[*].stats.batting).
+import battingFixture from "@/lib/mlb/__fixtures__/boxscore-batting.json";
 
 describe("extractBattingStats", () => {
   it("maps nested MLB box-score fields (strikeOuts/baseOnBalls renames)", () => {
@@ -238,5 +241,38 @@ describe("createPitchingStats", () => {
     });
     expect(result.inningsPitched).toBe(0);
     expect(result.holds).toBeNull();
+  });
+});
+
+describe("MLB API batting payload contract", () => {
+  // Locks the upstream MLB Stats API shape against a real captured payload, so a
+  // schema change (or a wrong assumption) is caught without hitting the network.
+  it("does NOT provide singles — they must be derived from hits", () => {
+    expect(battingFixture).not.toHaveProperty("singles");
+  });
+
+  it("provides the hit components we derive singles and total bases from", () => {
+    expect(battingFixture).toHaveProperty("hits");
+    expect(battingFixture).toHaveProperty("doubles");
+    expect(battingFixture).toHaveProperty("triples");
+    expect(battingFixture).toHaveProperty("homeRuns");
+  });
+
+  it("provides the remaining source fields extractBattingStats reads", () => {
+    // Note the API's own key names (renamed during extraction).
+    expect(battingFixture).toHaveProperty("atBats");
+    expect(battingFixture).toHaveProperty("rbi");
+    expect(battingFixture).toHaveProperty("runs");
+    expect(battingFixture).toHaveProperty("stolenBases");
+    expect(battingFixture).toHaveProperty("strikeOuts"); // -> strikeouts
+    expect(battingFixture).toHaveProperty("baseOnBalls"); // -> walks
+  });
+
+  it("derives singles correctly from the real payload", () => {
+    // Fixture: 1 hit, 1 double => 0 singles. extraction + scoring agree.
+    const raw = extractBattingStats({ stats: { batting: battingFixture } });
+    const singles =
+      raw.hits - (raw.doubles + raw.triples + raw.homeRuns);
+    expect(singles).toBe(0);
   });
 });
