@@ -169,6 +169,33 @@ describe('Yahoo', () => {
       expect(YAHOO.calculatePitchingPoints({ holds: 0 })).toBe(0)
     })
 
+    it("scores a full pitching line", () => {
+      // "6.0" => 18 outs + win (8) + 7 K (21) + 5 hits (-6.5) + 2 ER (-6) + 1 BB (-1.3)
+      expect(YAHOO.calculatePitchingPoints({ inningsPitched: "6.0", wins: 1, pitchingStrikeouts: 7, hitsAllowed: 5, earnedRuns: 2, walksIssued: 1 })).toBeCloseTo(33.2, 10)
+    })
+
+  })
+
+  describe('POINTS_SYSTEM', () => {
+    it("locks the published Yahoo weights", () => {
+      expect(YAHOO.POINTS_SYSTEM.runs).toBe(1.9)
+      expect(YAHOO.POINTS_SYSTEM.singles).toBe(2.6)
+      expect(YAHOO.POINTS_SYSTEM.doubles).toBe(5.2)
+      expect(YAHOO.POINTS_SYSTEM.triples).toBe(7.8)
+      expect(YAHOO.POINTS_SYSTEM.homeRuns).toBe(10.4)
+      expect(YAHOO.POINTS_SYSTEM.rbis).toBe(1.9)
+      expect(YAHOO.POINTS_SYSTEM.stolenBases).toBe(4.2)
+      expect(YAHOO.POINTS_SYSTEM.walks).toBe(2.6)
+      expect(YAHOO.POINTS_SYSTEM.hitByPitch).toBe(2.6)
+      expect(YAHOO.POINTS_SYSTEM.wins).toBe(8)
+      expect(YAHOO.POINTS_SYSTEM.saves).toBe(8)
+      expect(YAHOO.POINTS_SYSTEM.outs).toBe(1)
+      expect(YAHOO.POINTS_SYSTEM.hitsAllowed).toBe(-1.3)
+      expect(YAHOO.POINTS_SYSTEM.earnedRuns).toBe(-3)
+      expect(YAHOO.POINTS_SYSTEM.walksIssued).toBe(-1.3)
+      expect(YAHOO.POINTS_SYSTEM.hitBatters).toBe(-1.3)
+      expect(YAHOO.POINTS_SYSTEM.pitchingStrikeouts).toBe(3)
+    })
   })
 })
 
