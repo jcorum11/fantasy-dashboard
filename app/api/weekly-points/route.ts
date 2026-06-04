@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { calculateBattingPoints, calculatePitchingPoints } from "@/lib/mlb/points";
+import { YahooFantasyService } from "@/lib/yahoo/YahooFantasyService";
+import { enrichWithRoster } from "@/lib/processing/rosterEnrichment";
 
 export const dynamic = "force-dynamic";
 
@@ -181,43 +183,23 @@ export async function GET(req: Request) {
       })
     );
 
-    // Fetch rostered player names from ESPN if env vars present
-    const swid = process.env.SWID;
-    const espnS2 = process.env.ESPN_S2;
-    const leagueId = process.env.ESPN_LEAGUE_ID;
-    const seasonOverride = process.env.ESPN_SEASON
-      ? parseInt(process.env.ESPN_SEASON, 10)
-      : undefined;
-    const segmentOverride = process.env.ESPN_SEGMENT
-      ? parseInt(process.env.ESPN_SEGMENT, 10)
-      : 0;
-    if (swid && espnS2 && leagueId) {
+    // Flag rostered players using the Yahoo league (the only active league).
+    // Best-effort: if creds are missing or the API fails, everyone stays
+    // unrostered rather than erroring the response.
+    const clientId = process.env.YAHOO_CLIENT_ID;
+    const clientSecret = process.env.YAHOO_CLIENT_SECRET;
+    const refreshToken = process.env.YAHOO_REFRESH_TOKEN;
+    const leagueKey = process.env.YAHOO_LEAGUE_KEY;
+    if (clientId && clientSecret && refreshToken && leagueKey) {
       try {
-        const { ESPNFantasyService } = await import(
-          "@/lib/espn/ESPNFantasyService"
+        const service = new YahooFantasyService(
+          clientId,
+          clientSecret,
+          refreshToken,
+          leagueKey
         );
-        const service = new ESPNFantasyService(swid, espnS2);
-        const rawRosterNames = await service.fetchRosteredPlayerNames(
-          leagueId,
-          seasonOverride ?? season,
-          segmentOverride
-        );
-        // Helper to normalize names (remove diacritics, lowercase)
-        const normalize = (str: string) =>
-          str
-            .toLowerCase()
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "");
-
-        const rosterNames = new Set<string>();
-        rawRosterNames.forEach((n) => rosterNames.add(normalize(n)));
-
-        // Update roster flags using normalized comparison
-        response.forEach((player) => {
-          if (rosterNames.has(normalize(player.fullName))) {
-            player.isRostered = true;
-          }
-        });
+        const rosteredNames = await service.fetchRosteredPlayerNames();
+        enrichWithRoster(response, rosteredNames);
       } catch (err) {
         console.error("Failed to enrich with roster data", err);
       }
