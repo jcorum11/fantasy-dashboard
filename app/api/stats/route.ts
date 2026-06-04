@@ -12,6 +12,8 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const date = searchParams.get("date");
+    // Default to Yahoo scoring; only "espn" opts into the ESPN system.
+    const platform = searchParams.get("platform") === "espn" ? "espn" : "yahoo";
 
     if (!date) {
       return NextResponse.json(
@@ -21,7 +23,7 @@ export async function GET(request: NextRequest) {
     }
 
     const service = container.getPlayerStatsService();
-    const stats = await service.getPlayerStatsByDate(date);
+    const stats = await service.getPlayerStatsByDate(date, platform);
 
     return NextResponse.json({
       stats,

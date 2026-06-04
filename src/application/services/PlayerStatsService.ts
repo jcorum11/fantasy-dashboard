@@ -1,10 +1,7 @@
 import { IMLBClient } from "../../domain/interfaces/IMLBClient";
 import { PlayerStats } from "../../domain/models/PlayerStats";
 import { MLBBoxScore } from "../../../lib/types/mlb";
-import {
-  calculateBattingPoints,
-  calculatePitchingPoints,
-} from "../../../lib/mlb/points";
+import { pointsSystemFor, Platform } from "../../../lib/mlb/points";
 import { BattingStats } from "../../domain/models/BattingStats";
 import { PitchingStats } from "../../domain/models/PitchingStats";
 import { IPlayerStatsRepository } from "../../domain/repositories/IPlayerStatsRepository";
@@ -45,7 +42,10 @@ export class PlayerStatsService {
    * @param date The date in YYYY-MM-DD format or Date object
    * @returns Promise<PlayerStats[]> Array of player stats for the date
    */
-  async getPlayerStatsByDate(date: string | Date): Promise<PlayerStats[]> {
+  async getPlayerStatsByDate(
+    date: string | Date,
+    platform: Platform = "yahoo"
+  ): Promise<PlayerStats[]> {
     const dateStr =
       typeof date === "string" ? date : date.toISOString().split("T")[0];
     const games = await this.mlbClient.getGamesByDate(dateStr);
@@ -54,7 +54,11 @@ export class PlayerStatsService {
     for (const game of games) {
       try {
         const boxscore = await this.mlbClient.getGameBoxScore(game.gameId);
-        const gamePlayerStats = this.processPlayerStats(boxscore, dateStr);
+        const gamePlayerStats = this.processPlayerStats(
+          boxscore,
+          dateStr,
+          platform
+        );
         allPlayerStats.push(...gamePlayerStats);
       } catch (error) {
         console.error(`Error processing game ${game.gameId}:`, error);
@@ -73,9 +77,11 @@ export class PlayerStatsService {
    */
   private processPlayerStats(
     boxscore: MLBBoxScore,
-    gameDate: string
+    gameDate: string,
+    platform: Platform
   ): PlayerStats[] {
     const playerStats: PlayerStats[] = [];
+    const scoring = pointsSystemFor(platform);
     const awayTeam = boxscore.teams.away.team;
     const homeTeam = boxscore.teams.home.team;
     const gameDateObj = new Date(gameDate);
@@ -116,7 +122,7 @@ export class PlayerStatsService {
             strikeouts: player.stats.batting.strikeOuts,
             walks: player.stats.batting.baseOnBalls,
           };
-          points += calculateBattingPoints(stats);
+          points += scoring.calculateBattingPoints(stats);
           battingStats = BattingStats.create(
             stats.atBats || 0,
             stats.hits || 0,
@@ -142,7 +148,7 @@ export class PlayerStatsService {
             holds: player.stats.pitching.holds,
             gamesStarted: player.stats.pitching.gamesStarted || 0,
           };
-          points += calculatePitchingPoints(stats);
+          points += scoring.calculatePitchingPoints(stats);
           pitchingStats = PitchingStats.create(
             stats.inningsPitched ? parseFloat(stats.inningsPitched) : 0,
             stats.earnedRuns || 0,

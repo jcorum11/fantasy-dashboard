@@ -1,13 +1,15 @@
 import { PlayerStats } from "@/src/domain/models/PlayerStats";
+import { Platform } from "@/lib/mlb/points";
 import { BattingStatsTable } from "@/src/presentation/components/stats/BattingStatsTable";
 import { PitchingStatsTable } from "@/src/presentation/components/stats/PitchingStatsTable";
 
 interface StatsTableProps {
   stats: PlayerStats[];
   viewType: "batting" | "pitching";
+  platform: Platform;
 }
 
-export function StatsTable({ stats, viewType }: StatsTableProps) {
+export function StatsTable({ stats, viewType, platform }: StatsTableProps) {
   // Sort stats by points descending
   const sortedStats = [...stats].sort(
     (a, b) => (b.points ?? 0) - (a.points ?? 0)
@@ -26,9 +28,9 @@ export function StatsTable({ stats, viewType }: StatsTableProps) {
   return (
     <div className="overflow-x-auto bg-white rounded shadow">
       {viewType === "batting" ? (
-        <BattingStatsTable stats={dedupedStats} />
+        <BattingStatsTable stats={dedupedStats} platform={platform} />
       ) : (
-        <PitchingStatsTable stats={dedupedStats} />
+        <PitchingStatsTable stats={dedupedStats} platform={platform} />
       )}
     </div>
   );

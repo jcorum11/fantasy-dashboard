@@ -1,4 +1,5 @@
 import { PlayerStats } from "../../domain/models/PlayerStats";
+import { Platform } from "../../../lib/mlb/points";
 
 export interface PlayerStatsResponse {
   stats: PlayerStats[];
@@ -14,10 +15,16 @@ export class PlayerStatsClient {
     this.baseUrl = process.env.NEXT_PUBLIC_API_URL || "";
   }
 
-  async getPlayerStats(date?: string): Promise<PlayerStatsResponse> {
+  async getPlayerStats(
+    date?: string,
+    platform?: Platform
+  ): Promise<PlayerStatsResponse> {
     const url = new URL(`${this.baseUrl}/api/stats`);
     if (date) {
       url.searchParams.append("date", date);
+    }
+    if (platform) {
+      url.searchParams.append("platform", platform);
     }
     // Add a cache-busting parameter
     url.searchParams.append("nocache", Date.now().toString());

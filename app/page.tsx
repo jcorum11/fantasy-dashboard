@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import { format, subDays, addDays, isAfter, startOfDay } from "date-fns";
 import { DateNavigation } from "@/src/presentation/components/DateNavigation";
+import { PlatformNavigation } from "@/src/presentation/components/PlatformNavigation";
 import { ViewTypeToggle } from "@/src/presentation/components/ViewTypeToggle";
+import { Platform } from "@/lib/mlb/points";
 import { StatsTable } from "@/src/presentation/components/StatsTable";
 import { StatsStatus } from "@/src/presentation/components/StatsStatus";
 import { PlayerStatsClient } from "@/src/application/services/PlayerStatsClient";
@@ -14,6 +16,7 @@ const playerStatsClient = new PlayerStatsClient();
 
 export default function Home() {
   const [viewType, setViewType] = useState<"batting" | "pitching">("batting");
+  const [platform, setPlatform] = useState<Platform>("yahoo");
 
   // Determine the active MLB season – same heuristic used across the app:
   //   • November–February belong to the following season (e.g. Nov 2024 ⇒ 2024 season)
@@ -28,7 +31,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
-  const fetchStats = async (date: Date) => {
+  const fetchStats = async (date: Date, platform: Platform) => {
     setIsLoading(true);
     setMessage(null);
 
@@ -43,7 +46,7 @@ export default function Home() {
       // Fetch player stats and roster info in parallel – thread season so the
       // backend can pull the correct dataset.
       const [statsResp, waiverResp] = await Promise.all([
-        playerStatsClient.getPlayerStats(formattedDate),
+        playerStatsClient.getPlayerStats(formattedDate, platform),
         fetch(`/api/weekly-points?season=${seasonForDate}`, {
           cache: "no-store",
         }),
@@ -95,8 +98,8 @@ export default function Home() {
   };
 
   useEffect(() => {
-    fetchStats(currentDate);
-  }, [currentDate]);
+    fetchStats(currentDate, platform);
+  }, [currentDate, platform]);
 
   const handlePreviousDay = () => {
     setCurrentDate((prev) => subDays(prev, 1));
@@ -148,6 +151,13 @@ export default function Home() {
         </a>
       </div>
 
+      <div className="mb-4">
+        <PlatformNavigation
+          platform={platform}
+          onPlatformChange={setPlatform}
+        />
+      </div>
+
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <DateNavigation
           currentDate={currentDate}
@@ -169,7 +179,11 @@ export default function Home() {
             currently on our waiver wire. Click any row to open the
             corresponding player’s Baseball Savant page.
           </p>
-          <StatsTable stats={dedupedFilteredStats} viewType={viewType} />
+          <StatsTable
+            stats={dedupedFilteredStats}
+            viewType={viewType}
+            platform={platform}
+          />
         </>
       )}
     </main>

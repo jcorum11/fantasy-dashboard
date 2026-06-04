@@ -1,6 +1,9 @@
-export const formatPoints = (points: number | null | undefined): string => {
+export const formatPoints = (
+  points: number | null | undefined,
+  decimals = 0
+): string => {
   if (points === null || points === undefined) return "0";
-  return Math.round(points).toString();
+  return points.toFixed(decimals);
 };
 
 export const getPointsClass = (points: number | null | undefined): string => {

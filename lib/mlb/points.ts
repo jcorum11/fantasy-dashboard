@@ -184,3 +184,13 @@ export const calculateBattingPoints = (stats: MLBStats): number =>
   ESPN.calculateBattingPoints(stats);
 export const calculatePitchingPoints = (stats: MLBStats): number =>
   ESPN.calculatePitchingPoints(stats);
+
+/** Fantasy platforms whose scoring this app supports. */
+export type Platform = "yahoo" | "espn";
+
+/** Resolve the scoring system for a platform (defaults to Yahoo). */
+export function pointsSystemFor(
+  platform: Platform
+): YahooPointsSystem | EspnPointsSystem {
+  return platform === "espn" ? ESPN : YAHOO;
+}

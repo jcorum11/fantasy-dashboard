@@ -1,21 +1,18 @@
 import { PlayerStats } from "../../../domain/models/PlayerStats";
+import { Platform } from "@/lib/mlb/points";
 import {
   TableHeader,
   TableCell,
   PlayerNameCell,
   PointsCell,
 } from "./TableElements";
-import {
-  formatPoints,
-  getPointsClass,
-  getPointsBg,
-} from "../utils/statsFormatting";
 
 interface BattingStatsTableProps {
   stats: PlayerStats[];
+  platform: Platform;
 }
 
-export function BattingStatsTable({ stats }: BattingStatsTableProps) {
+export function BattingStatsTable({ stats, platform }: BattingStatsTableProps) {
   return (
     <div className="relative overflow-auto max-h-[600px]">
       <table className="w-full bg-white border border-slate-200">
@@ -52,12 +49,7 @@ export function BattingStatsTable({ stats }: BattingStatsTableProps) {
                   isRostered={(player as any).isRostered}
                   className="sticky left-0 z-10 bg-white hover:bg-slate-50 border-r border-slate-200 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]"
                 />
-                <PointsCell
-                  points={player.points}
-                  formatPoints={formatPoints}
-                  getPointsClass={getPointsClass}
-                  getPointsBg={getPointsBg}
-                />
+                <PointsCell points={player.points} platform={platform} />
                 <TableCell>
                   {!player.isHomeTeam ? "@" : ""}
                   {player.opponentTeam}

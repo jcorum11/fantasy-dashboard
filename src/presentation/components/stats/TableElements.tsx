@@ -1,4 +1,10 @@
 import { ReactNode } from "react";
+import { Platform } from "@/lib/mlb/points";
+import {
+  formatPoints,
+  getPointsClass,
+  getPointsBg,
+} from "../utils/statsFormatting";
 
 interface TableHeaderProps {
   children: ReactNode;
@@ -83,24 +89,20 @@ export function PlayerNameCell({
 
 interface PointsCellProps {
   points: number | null | undefined;
-  formatPoints: (points: number | null | undefined) => string;
-  getPointsClass: (points: number | null | undefined) => string;
-  getPointsBg: (points: number | null | undefined) => string;
+  platform: Platform;
 }
 
-export function PointsCell({
-  points,
-  formatPoints,
-  getPointsClass,
-  getPointsBg,
-}: PointsCellProps) {
+export function PointsCell({ points, platform }: PointsCellProps) {
+  // ESPN scores are whole numbers; Yahoo always shows two decimals (matching
+  // the Yahoo UI), even when the trailing digit is a zero.
+  const decimals = platform === "espn" ? 0 : 2;
   return (
     <td
       className={`px-4 py-2 text-sm font-bold text-center rounded ${getPointsClass(
         points
       )} ${getPointsBg(points)}`}
     >
-      {formatPoints(points)}
+      {formatPoints(points, decimals)}
     </td>
   );
 }
