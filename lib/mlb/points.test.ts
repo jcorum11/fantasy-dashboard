@@ -145,6 +145,10 @@ describe('Yahoo', () => {
       expect(YAHOO.calculateBattingPoints({ hits: 5, doubles: 1, triples: 1, homeRuns: 1, runs: 2, rbi: 3, stolenBases: 1, walks: 1, strikeouts: 4 })).toBeCloseTo(44.9, 10)
     })
 
+    it("scores hit by pitch at 2.6", () => {
+      expect(YAHOO.calculateBattingPoints({ hitByPitch: 1 })).toBeCloseTo(2.6, 10)
+    })
+
   })
 
   describe('calculatePitchingPoints', () => {
@@ -172,6 +176,11 @@ describe('Yahoo', () => {
     it("scores a full pitching line", () => {
       // "6.0" => 18 outs + win (8) + 7 K (21) + 5 hits (-6.5) + 2 ER (-6) + 1 BB (-1.3)
       expect(YAHOO.calculatePitchingPoints({ inningsPitched: "6.0", wins: 1, pitchingStrikeouts: 7, hitsAllowed: 5, earnedRuns: 2, walksIssued: 1 })).toBeCloseTo(33.2, 10)
+    })
+
+    it("scores hit batters at -1.3", () => {
+      // Mapped from the API's stats.pitching.hitBatsmen during extraction.
+      expect(YAHOO.calculatePitchingPoints({ hitBatters: 1 })).toBeCloseTo(-1.3, 10)
     })
 
   })

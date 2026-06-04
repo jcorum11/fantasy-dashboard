@@ -20,6 +20,7 @@ export interface RawBattingStats {
   stolenBases: number;
   strikeouts: number;
   walks: number;
+  hitByPitch: number;
 }
 
 export interface RawPitchingStats {
@@ -32,6 +33,7 @@ export interface RawPitchingStats {
   losses: number;
   saves: number;
   holds: number | null;
+  hitBatters: number;
   gamesStarted: number;
 }
 
@@ -47,6 +49,7 @@ export function extractBattingStats(player: any): RawBattingStats {
     stolenBases: player.stats?.batting?.stolenBases ?? 0,
     strikeouts: player.stats?.batting?.strikeOuts ?? 0,
     walks: player.stats?.batting?.baseOnBalls ?? 0,
+    hitByPitch: player.stats?.batting?.hitByPitch ?? 0,
   };
 }
 
@@ -61,6 +64,7 @@ export function extractPitchingStats(player: any): RawPitchingStats {
     losses: player.stats?.pitching?.losses ?? 0,
     saves: player.stats?.pitching?.saves ?? 0,
     holds: player.stats?.pitching?.holds ?? null,
+    hitBatters: player.stats?.pitching?.hitBatsmen ?? 0,
     gamesStarted: player.stats?.pitching?.gamesStarted ?? 0,
   };
 }

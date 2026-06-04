@@ -11,6 +11,7 @@ export interface MLBStats {
   stolenBases?: number;
   walks?: number;
   strikeouts?: number;
+  hitByPitch?: number; // API: stats.batting.hitByPitch
 
   // Pitching stats
   inningsPitched?: string;
@@ -22,6 +23,7 @@ export interface MLBStats {
   hitsAllowed?: number;
   walksIssued?: number;
   holds?: number;
+  hitBatters?: number; // API: stats.pitching.hitBatsmen
   gamesStarted?: number;
 }
 

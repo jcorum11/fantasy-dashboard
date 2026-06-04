@@ -28,6 +28,7 @@ describe("extractBattingStats", () => {
           stolenBases: 1,
           strikeOuts: 2,
           baseOnBalls: 1,
+          hitByPitch: 1,
         },
       },
     };
@@ -42,7 +43,13 @@ describe("extractBattingStats", () => {
       stolenBases: 1,
       strikeouts: 2,
       walks: 1,
+      hitByPitch: 1,
     });
+  });
+
+  it("extracts hitByPitch from the batting payload", () => {
+    const player = { stats: { batting: { hitByPitch: 2 } } };
+    expect(extractBattingStats(player).hitByPitch).toBe(2);
   });
 
   it("defaults every field to 0 when batting stats are absent", () => {
@@ -57,6 +64,7 @@ describe("extractBattingStats", () => {
       stolenBases: 0,
       strikeouts: 0,
       walks: 0,
+      hitByPitch: 0,
     });
   });
 });
@@ -75,6 +83,7 @@ describe("extractPitchingStats", () => {
           losses: 0,
           saves: 0,
           holds: 1,
+          hitBatsmen: 3,
           gamesStarted: 1,
         },
       },
@@ -89,8 +98,14 @@ describe("extractPitchingStats", () => {
       losses: 0,
       saves: 0,
       holds: 1,
+      hitBatters: 3,
       gamesStarted: 1,
     });
+  });
+
+  it("maps the API hitBatsmen key to hitBatters", () => {
+    const player = { stats: { pitching: { hitBatsmen: 4 } } };
+    expect(extractPitchingStats(player).hitBatters).toBe(4);
   });
 
   it("defaults inningsPitched to 0, holds to null, the rest to 0", () => {
@@ -104,6 +119,7 @@ describe("extractPitchingStats", () => {
       losses: 0,
       saves: 0,
       holds: null,
+      hitBatters: 0,
       gamesStarted: 0,
     });
   });
@@ -122,6 +138,7 @@ describe("calculateBattingPointsFromRaw", () => {
       stolenBases: 1,
       strikeouts: 2,
       walks: 1,
+      hitByPitch: 0,
     };
     // 2 singles + 1 double + 1 HR => 8 TB; +1 BB +2 R +3 RBI +1 SB -2 K = 13
     expect(calculateBattingPointsFromRaw(raw)).toBe(13);
@@ -140,6 +157,7 @@ describe("calculatePitchingPointsFromRaw", () => {
       losses: 0,
       saves: 0,
       holds: null,
+      hitBatters: 0,
       gamesStarted: 1,
     };
     expect(calculatePitchingPointsFromRaw(raw)).toBe(23);
@@ -156,6 +174,7 @@ describe("calculatePitchingPointsFromRaw", () => {
       losses: 0,
       saves: 0,
       holds: null,
+      hitBatters: 0,
       gamesStarted: 1,
     };
     expect(calculatePitchingPointsFromRaw(raw)).toBe(21);
@@ -174,6 +193,7 @@ describe("createBattingStats", () => {
     stolenBases: 1,
     strikeouts: 1,
     walks: 2,
+    hitByPitch: 0,
   };
 
   it("builds a BattingStats value object (doubles/triples not retained)", () => {
@@ -214,6 +234,7 @@ describe("createPitchingStats", () => {
     losses: 0,
     saves: 0,
     holds: 2,
+    hitBatters: 0,
     gamesStarted: 1,
   };
 
@@ -266,6 +287,7 @@ describe("MLB API batting payload contract", () => {
     expect(battingFixture).toHaveProperty("stolenBases");
     expect(battingFixture).toHaveProperty("strikeOuts"); // -> strikeouts
     expect(battingFixture).toHaveProperty("baseOnBalls"); // -> walks
+    expect(battingFixture).toHaveProperty("hitByPitch");
   });
 
   it("derives singles correctly from the real payload", () => {
