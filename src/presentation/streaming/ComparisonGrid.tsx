@@ -7,6 +7,7 @@ import {
 } from "@/src/application/services/StreamingComparisonService";
 import {
   formatAvg,
+  formatHitRate,
   RESOURCE_LABELS,
 } from "@/src/presentation/streaming/formatting";
 
@@ -28,6 +29,9 @@ function Cell({ stats }: { stats: SegmentStats | undefined }) {
     <td className="px-4 py-2 text-center">
       <span className="font-semibold text-slate-900">
         {formatAvg(stats.avgPoints)}
+      </span>{" "}
+      <span className="text-sm text-slate-600">
+        · {formatHitRate(stats.hitRate)} hit
       </span>{" "}
       <span className="text-xs text-slate-500">(n={stats.scored})</span>
     </td>

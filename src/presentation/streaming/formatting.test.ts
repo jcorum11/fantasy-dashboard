@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   formatAvg,
+  formatHitRate,
   presetRange,
 } from "@/src/presentation/streaming/formatting";
 
 // formatAvg(avg) -> "21.3" (one decimal) or "—" for null
+// formatHitRate(rate) -> "52%" (whole percent) or "—" for null
 // presetRange(preset, today) -> {startDate, endDate} as YYYY-MM-DD strings;
 //   "season" starts Mar 1 of today's year; "30"/"14"/"7" are day lookbacks.
 //   endDate is always today.
@@ -19,6 +21,18 @@ describe("formatAvg", () => {
 
   it("renders null as an em dash", () => {
     expect(formatAvg(null)).toBe("—");
+  });
+});
+
+describe("formatHitRate", () => {
+  it("formats a fraction as a whole percent", () => {
+    expect(formatHitRate(0.523)).toBe("52%");
+    expect(formatHitRate(1)).toBe("100%");
+    expect(formatHitRate(0)).toBe("0%");
+  });
+
+  it("renders null as an em dash", () => {
+    expect(formatHitRate(null)).toBe("—");
   });
 });
 

@@ -7,7 +7,9 @@ import { makeReport } from "@/src/presentation/streaming/ComparisonGrid.mocks";
 //   <ComparisonGrid resources={report.resources} />
 //   A table: one column per resource (always all three), one row per
 //   segment — Overall, then High/Mid/Low buckets. Every cell shows
-//   "avg (n)" where n is the SCORED count, or "—" when nothing scored.
+//   "avg · hit% hit (n)" where n is the SCORED count and hit% is the
+//   fraction of scored picks clearing the good-start bar, or "—" when
+//   nothing scored.
 
 describe("ComparisonGrid", () => {
   it("renders a column per resource and a row per segment", () => {
@@ -40,6 +42,20 @@ describe("ComparisonGrid", () => {
     expect(within(overall).getByText("(n=1966)")).toBeInTheDocument();
     expect(within(overall).getByText("16.1")).toBeInTheDocument();
     expect(within(overall).getByText("(n=2039)")).toBeInTheDocument();
+  });
+
+  it("shows the hit rate next to the average", () => {
+    render(<ComparisonGrid resources={makeReport().resources} />);
+
+    const overall = screen.getByRole("rowheader", { name: "Overall" })
+      .closest("tr")!;
+    expect(within(overall).getByText(/52% hit/)).toBeInTheDocument();
+    expect(within(overall).getByText(/50% hit/)).toBeInTheDocument();
+
+    const high = screen.getByRole("rowheader", { name: "High" })
+      .closest("tr")!;
+    expect(within(high).getByText(/69% hit/)).toBeInTheDocument();
+    expect(within(high).getByText(/68% hit/)).toBeInTheDocument();
   });
 
   it("renders an em dash for segments with no scored picks", () => {

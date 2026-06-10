@@ -28,6 +28,7 @@ describe("TierBreakdown", () => {
       .getByRole("rowheader", { name: "Auto-Starts" })
       .closest("tr")!;
     expect(within(auto).getByText("23.6")).toBeInTheDocument();
+    expect(within(auto).getByText(/74% hit/)).toBeInTheDocument();
     expect(within(auto).getByText("(n=431)")).toBeInTheDocument();
   });
 

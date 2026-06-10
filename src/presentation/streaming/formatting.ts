@@ -12,6 +12,10 @@ export function formatAvg(avg: number | null): string {
   return avg === null ? "—" : avg.toFixed(1);
 }
 
+export function formatHitRate(rate: number | null): string {
+  return rate === null ? "—" : `${Math.round(rate * 100)}%`;
+}
+
 export function presetRange(
   preset: RangePreset,
   today: Date

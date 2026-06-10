@@ -2,6 +2,7 @@
 
 import {
   formatAvg,
+  formatHitRate,
   RESOURCE_LABELS,
 } from "@/src/presentation/streaming/formatting";
 import { StreamingResourcesProps } from "@/src/presentation/streaming/ComparisonGrid";
@@ -33,6 +34,9 @@ export function TierBreakdown({ resources }: StreamingResourcesProps) {
                   <td className="px-4 py-2 text-center">
                     <span className="font-semibold text-slate-900">
                       {formatAvg(tier.avgPoints)}
+                    </span>{" "}
+                    <span className="text-sm text-slate-600">
+                      · {formatHitRate(tier.hitRate)} hit
                     </span>{" "}
                     <span className="text-xs text-slate-500">
                       (n={tier.scored})
