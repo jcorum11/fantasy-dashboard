@@ -50,6 +50,23 @@ describe("rowToStreamingPick", () => {
     expect(pick.rawScore).toBeNull();
   });
 
+  it("maps scoring columns: actual_points and scored_at", () => {
+    const scored = rowToStreamingPick(
+      buildPickRow({
+        actual_points: 23.4,
+        scored_at: "2026-06-11T17:00:00.000Z",
+      })
+    );
+    expect(scored.actualPoints).toBe(23.4);
+    expect(scored.scoredAt?.toISOString()).toBe("2026-06-11T17:00:00.000Z");
+
+    const pending = rowToStreamingPick(
+      buildPickRow({ actual_points: null, scored_at: null })
+    );
+    expect(pending.actualPoints).toBeNull();
+    expect(pending.scoredAt).toBeNull();
+  });
+
   it("maps a tiered Pitcher List row", () => {
     const pick = rowToStreamingPick(
       buildPickRow({

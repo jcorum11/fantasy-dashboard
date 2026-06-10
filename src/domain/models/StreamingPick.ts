@@ -15,6 +15,10 @@ export interface StreamingPickProps {
   rank?: number | null;
   tier?: string | null;
   rawScore?: number | null;
+  /** Realized Yahoo points; null = didn't pitch (when scoredAt is set). */
+  actualPoints?: number | null;
+  /** When scoring ran for this pick; null = not yet scored. */
+  scoredAt?: Date | null;
 }
 
 export class StreamingPick {
@@ -29,7 +33,9 @@ export class StreamingPick {
     private readonly _isHome: boolean | null,
     private readonly _rank: number | null,
     private readonly _tier: string | null,
-    private readonly _rawScore: number | null
+    private readonly _rawScore: number | null,
+    private readonly _actualPoints: number | null,
+    private readonly _scoredAt: Date | null
   ) {}
 
   public static create(props: StreamingPickProps): StreamingPick {
@@ -65,7 +71,9 @@ export class StreamingPick {
       props.isHome ?? null,
       rank,
       props.tier ?? null,
-      props.rawScore ?? null
+      props.rawScore ?? null,
+      props.actualPoints ?? null,
+      props.scoredAt ?? null
     );
   }
 
@@ -102,6 +110,12 @@ export class StreamingPick {
   get rawScore(): number | null {
     return this._rawScore;
   }
+  get actualPoints(): number | null {
+    return this._actualPoints;
+  }
+  get scoredAt(): Date | null {
+    return this._scoredAt;
+  }
 
   public toJSON() {
     return {
@@ -116,6 +130,8 @@ export class StreamingPick {
       rank: this._rank,
       tier: this._tier,
       rawScore: this._rawScore,
+      actualPoints: this._actualPoints,
+      scoredAt: this._scoredAt ? this._scoredAt.toISOString() : null,
     };
   }
 }

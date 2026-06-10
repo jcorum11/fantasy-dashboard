@@ -13,6 +13,8 @@ export interface StreamingPickRow {
   rank: number | null;
   tier: string | null;
   raw_score: number | string | null;
+  actual_points?: number | null;
+  scored_at?: string | Date | null;
 }
 
 // DATE columns come back as "YYYY-MM-DD"; anchor to UTC midnight so the
@@ -34,5 +36,7 @@ export function rowToStreamingPick(row: StreamingPickRow): StreamingPick {
     rank: row.rank,
     tier: row.tier,
     rawScore: row.raw_score === null ? null : Number(row.raw_score),
+    actualPoints: row.actual_points ?? null,
+    scoredAt: row.scored_at == null ? null : new Date(row.scored_at),
   });
 }

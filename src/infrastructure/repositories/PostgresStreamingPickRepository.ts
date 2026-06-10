@@ -188,7 +188,7 @@ export class PostgresStreamingPickRepository
         ? await this.sql`
             SELECT resource, pitcher_name, game_date, pick_date,
                    mlb_player_id, team, opponent, is_home,
-                   rank, tier, raw_score
+                   rank, tier, raw_score, actual_points, scored_at
             FROM streaming_picks
             WHERE game_date BETWEEN ${start}::date AND ${end}::date
               AND resource = ${resource}
@@ -197,7 +197,7 @@ export class PostgresStreamingPickRepository
         : await this.sql`
             SELECT resource, pitcher_name, game_date, pick_date,
                    mlb_player_id, team, opponent, is_home,
-                   rank, tier, raw_score
+                   rank, tier, raw_score, actual_points, scored_at
             FROM streaming_picks
             WHERE game_date BETWEEN ${start}::date AND ${end}::date
             ORDER BY game_date, resource, rank NULLS LAST

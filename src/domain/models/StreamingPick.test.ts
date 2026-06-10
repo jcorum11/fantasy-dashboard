@@ -20,6 +20,19 @@ describe("StreamingPick", () => {
       expect(pick.pickDate.toISOString()).toBe("2026-06-09T00:00:00.000Z");
     });
 
+    it("carries scoring fields when provided and defaults them to null", () => {
+      const unscored = StreamingPick.create(buildPickProps());
+      expect(unscored.actualPoints).toBeNull();
+      expect(unscored.scoredAt).toBeNull();
+
+      const scoredAt = new Date("2026-06-11T17:00:00Z");
+      const scored = StreamingPick.create(
+        buildPickProps({ actualPoints: 23.4, scoredAt })
+      );
+      expect(scored.actualPoints).toBe(23.4);
+      expect(scored.scoredAt).toBe(scoredAt);
+    });
+
     it("defaults omitted optional fields to null", () => {
       const pick = StreamingPick.create({
         resource: "pitcherlist",
@@ -95,6 +108,8 @@ describe("StreamingPick", () => {
         rank: 4,
         tier: null,
         rawScore: 78.5,
+        actualPoints: null,
+        scoredAt: null,
       });
     });
   });

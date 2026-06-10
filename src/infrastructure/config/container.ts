@@ -3,6 +3,7 @@ import { MLBClient } from "../mlb/MLBClient";
 import { PlayerStatsService } from "../../application/services/PlayerStatsService";
 import { StreamingPickIngestService } from "../../application/services/StreamingPickIngestService";
 import { StreamingPickScoringService } from "../../application/services/StreamingPickScoringService";
+import { StreamingComparisonService } from "../../application/services/StreamingComparisonService";
 import { IStreamingPickRepository } from "../../domain/repositories/IStreamingPickRepository";
 import { PostgresStreamingPickRepository } from "../repositories/PostgresStreamingPickRepository";
 import { DailyWaiversClient } from "../streaming/DailyWaiversClient";
@@ -17,6 +18,7 @@ export class Container {
   private streamingPickIngestService: StreamingPickIngestService | null = null;
   private streamingPickScoringService: StreamingPickScoringService | null =
     null;
+  private streamingComparisonService: StreamingComparisonService | null = null;
 
   private constructor() {}
 
@@ -46,6 +48,9 @@ export class Container {
     );
     this.streamingPickScoringService = new StreamingPickScoringService(
       this.playerStatsService,
+      this.streamingPickRepository
+    );
+    this.streamingComparisonService = new StreamingComparisonService(
       this.streamingPickRepository
     );
   }
@@ -83,5 +88,12 @@ export class Container {
       throw new Error("Container not initialized");
     }
     return this.streamingPickScoringService;
+  }
+
+  public getStreamingComparisonService(): StreamingComparisonService {
+    if (!this.streamingComparisonService) {
+      throw new Error("Container not initialized");
+    }
+    return this.streamingComparisonService;
   }
 }
