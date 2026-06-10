@@ -4,6 +4,7 @@ import { PlayerStatsService } from "../../application/services/PlayerStatsServic
 import { StreamingPickIngestService } from "../../application/services/StreamingPickIngestService";
 import { StreamingPickScoringService } from "../../application/services/StreamingPickScoringService";
 import { StreamingComparisonService } from "../../application/services/StreamingComparisonService";
+import { DailyBreakdownService } from "../../application/services/DailyBreakdownService";
 import { IStreamingPickRepository } from "../../domain/repositories/IStreamingPickRepository";
 import { PostgresStreamingPickRepository } from "../repositories/PostgresStreamingPickRepository";
 import { DailyWaiversClient } from "../streaming/DailyWaiversClient";
@@ -19,6 +20,7 @@ export class Container {
   private streamingPickScoringService: StreamingPickScoringService | null =
     null;
   private streamingComparisonService: StreamingComparisonService | null = null;
+  private dailyBreakdownService: DailyBreakdownService | null = null;
 
   private constructor() {}
 
@@ -51,6 +53,9 @@ export class Container {
       this.streamingPickRepository
     );
     this.streamingComparisonService = new StreamingComparisonService(
+      this.streamingPickRepository
+    );
+    this.dailyBreakdownService = new DailyBreakdownService(
       this.streamingPickRepository
     );
   }
@@ -95,5 +100,12 @@ export class Container {
       throw new Error("Container not initialized");
     }
     return this.streamingComparisonService;
+  }
+
+  public getDailyBreakdownService(): DailyBreakdownService {
+    if (!this.dailyBreakdownService) {
+      throw new Error("Container not initialized");
+    }
+    return this.dailyBreakdownService;
   }
 }
