@@ -4,6 +4,13 @@ import {
   STREAMING_RESOURCES,
   StreamingResource,
 } from "@/src/domain/models/StreamingResource";
+import {
+  assignBuckets,
+  BUCKET_ORDER,
+  RankBucket,
+} from "@/src/application/services/rankBuckets";
+
+export type { RankBucket } from "@/src/application/services/rankBuckets";
 
 export interface ComparisonRepository {
   findByGameDateRange(
@@ -13,8 +20,6 @@ export interface ComparisonRepository {
   ): Promise<StreamingPick[]>;
   findIngestRuns(startDate: Date, endDate: Date): Promise<IngestRun[]>;
 }
-
-export type RankBucket = "high" | "mid" | "low";
 
 export interface SegmentStats {
   picks: number;
@@ -36,8 +41,6 @@ export interface ComparisonReport {
   resources: ResourceComparison[];
 }
 
-const BUCKET_ORDER: RankBucket[] = ["high", "mid", "low"];
-
 function segmentStats(picks: StreamingPick[]): SegmentStats {
   const scored = picks.filter((p) => p.actualPoints !== null);
   return {
@@ -49,14 +52,6 @@ function segmentStats(picks: StreamingPick[]): SegmentStats {
         : scored.reduce((sum, p) => sum + (p.actualPoints as number), 0) /
           scored.length,
   };
-}
-
-/** Tercile by position within one day's rank-ordered list. */
-function bucketFor(index: number, total: number): RankBucket {
-  const position = index / total;
-  if (position < 1 / 3) return "high";
-  if (position < 2 / 3) return "mid";
-  return "low";
 }
 
 export class StreamingComparisonService {
@@ -107,32 +102,13 @@ export class StreamingComparisonService {
     };
   }
 
-  /**
-   * Buckets are terciles by rank order WITHIN each game date's list (a
-   * sparse day's #1 is that day's "high" — never pooled across days), then
-   * aggregated across the range.
-   */
+  /** Buckets via the shared per-day tercile assignment (rankBuckets.ts). */
   private aggregateBuckets(
     picks: StreamingPick[]
   ): Array<SegmentStats & { bucket: RankBucket }> {
-    const byDay = new Map<string, StreamingPick[]>();
-    for (const pick of picks) {
-      const day = pick.gameDate.toISOString();
-      byDay.set(day, [...(byDay.get(day) ?? []), pick]);
-    }
-
     const byBucket = new Map<RankBucket, StreamingPick[]>();
-    for (const day of byDay.values()) {
-      day.sort((a, b) => {
-        if (a.rank !== b.rank) {
-          return (a.rank ?? Infinity) - (b.rank ?? Infinity);
-        }
-        return a.pitcherName.localeCompare(b.pitcherName);
-      });
-      day.forEach((pick, index) => {
-        const bucket = bucketFor(index, day.length);
-        byBucket.set(bucket, [...(byBucket.get(bucket) ?? []), pick]);
-      });
+    for (const { pick, bucket } of assignBuckets(picks)) {
+      byBucket.set(bucket, [...(byBucket.get(bucket) ?? []), pick]);
     }
 
     return BUCKET_ORDER.filter((bucket) => byBucket.has(bucket)).map(
