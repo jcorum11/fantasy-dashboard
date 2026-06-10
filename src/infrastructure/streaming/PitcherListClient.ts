@@ -1,4 +1,5 @@
 import { StreamingPick } from "@/src/domain/models/StreamingPick";
+import { stripTags } from "@/src/infrastructure/streaming/htmlText";
 
 const WP_POSTS_URL =
   "https://pitcherlist.com/wp-json/wp/v2/posts?categories=233&per_page=1";
@@ -13,21 +14,6 @@ const DAY_TITLE_RE = /^\w+day\s+(\d{1,2})\/(\d{1,2}).*Streamer Rankings/;
 const SECTION_ELEMENT_RE =
   /<span style="[^"]*font-size: 20pt[^"]*"[^>]*>(.*?)<\/span>|<p><strong>(.*?)<\/strong>/gs;
 const MATCHUP_RE = /^(.+?)\s*(vs\.|@)\s*([A-Z]{2,4})\b/;
-
-function decodeEntities(text: string): string {
-  return text
-    .replace(/&#(\d+);/g, (_, code) => String.fromCodePoint(Number(code)))
-    .replace(/[‘’]/g, "'") // curly apostrophes → ASCII for MLB name matching
-    .replace(/&amp;/g, "&")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"');
-}
-
-function stripTags(html: string): string {
-  return decodeEntities(html.replace(/<[^>]+>/g, "")).trim();
-}
 
 interface DaySection {
   gameDate: Date;
