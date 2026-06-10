@@ -8,6 +8,10 @@ if (!process.env.DATABASE_URL) {
 }
 container.initialize(process.env.DATABASE_URL);
 
+// Never prerender at build time — this route ingests from live sources and
+// writes to the database when invoked.
+export const dynamic = "force-dynamic";
+
 // Vercel cron invokes paths with GET. When CRON_SECRET is set, Vercel sends
 // it as a Bearer token and manual calls must supply it too.
 export async function GET(request: NextRequest) {

@@ -60,7 +60,7 @@ export function parsePitcherListArticle(
   for (const section of splitDaySections(contentHtml, postDate)) {
     let tier: string | null = null;
     let rank = 0;
-    const seen = new Set<string>();
+    const occurrences = new Map<string, number>();
 
     for (const element of section.html.matchAll(SECTION_ELEMENT_RE)) {
       const [, tierHtml, strongHtml] = element;
@@ -74,13 +74,9 @@ export function parsePitcherListArticle(
       if (!matchup) continue; // legend entries, notes — not picks
 
       const [, pitcherName, separator, opponent] = matchup;
-      if (seen.has(pitcherName)) {
-        throw new Error(
-          `Pitcher List lists ${pitcherName} twice on ` +
-            `${section.gameDate.toISOString().split("T")[0]} — doubleheader?`
-        );
-      }
-      seen.add(pitcherName);
+      // Doubleheaders: a second same-day listing becomes appearance 2.
+      const appearance = (occurrences.get(pitcherName) ?? 0) + 1;
+      occurrences.set(pitcherName, appearance);
 
       picks.push(
         StreamingPick.create({
@@ -92,6 +88,7 @@ export function parsePitcherListArticle(
           isHome: separator === "vs.",
           rank: ++rank,
           tier,
+          appearance,
         })
       );
     }

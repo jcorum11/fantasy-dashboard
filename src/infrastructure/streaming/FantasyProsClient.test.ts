@@ -99,14 +99,20 @@ describe("parseFantasyProsPage", () => {
     ).toBe(false);
   });
 
-  it("throws when a pitcher appears twice on one game date — doubleheader guard", () => {
+  it("keeps both rows when a pitcher appears twice on one game date (doubleheader)", () => {
     const doubled = PAGE_HTML.replace(
       'fp-player-name="Logan O&#8217;Hoppe Sr."',
       'fp-player-name="Shohei Ohtani"'
     );
-    expect(() => parseFantasyProsPage(doubled, PICK_DATE)).toThrow(
-      /twice|duplicate/i
+
+    const doubledPicks = parseFantasyProsPage(doubled, PICK_DATE);
+    const ohtanis = doubledPicks.filter(
+      (p) => p.pitcherName === "Shohei Ohtani"
     );
+    expect(ohtanis.map((p) => [p.rank, p.appearance])).toEqual([
+      [1, 1],
+      [2, 2],
+    ]);
   });
 
   it("throws when no day tables are present — markup drift guard", () => {

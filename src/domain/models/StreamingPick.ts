@@ -15,6 +15,8 @@ export interface StreamingPickProps {
   rank?: number | null;
   tier?: string | null;
   rawScore?: number | null;
+  /** 1-based occurrence within (resource, gameDate) — 2 for a doubleheader's second listing. */
+  appearance?: number;
   /** Realized Yahoo points; null = didn't pitch (when scoredAt is set). */
   actualPoints?: number | null;
   /** When scoring ran for this pick; null = not yet scored. */
@@ -34,6 +36,7 @@ export class StreamingPick {
     private readonly _rank: number | null,
     private readonly _tier: string | null,
     private readonly _rawScore: number | null,
+    private readonly _appearance: number,
     private readonly _actualPoints: number | null,
     private readonly _scoredAt: Date | null
   ) {}
@@ -60,6 +63,11 @@ export class StreamingPick {
       throw new Error(`Rank must be a positive integer, got: ${rank}`);
     }
 
+    const appearance = props.appearance ?? 1;
+    if (!Number.isInteger(appearance) || appearance < 1) {
+      throw new Error(`Appearance must be a positive integer, got: ${appearance}`);
+    }
+
     return new StreamingPick(
       props.resource,
       pitcherName,
@@ -72,6 +80,7 @@ export class StreamingPick {
       rank,
       props.tier ?? null,
       props.rawScore ?? null,
+      appearance,
       props.actualPoints ?? null,
       props.scoredAt ?? null
     );
@@ -110,6 +119,9 @@ export class StreamingPick {
   get rawScore(): number | null {
     return this._rawScore;
   }
+  get appearance(): number {
+    return this._appearance;
+  }
   get actualPoints(): number | null {
     return this._actualPoints;
   }
@@ -130,6 +142,7 @@ export class StreamingPick {
       rank: this._rank,
       tier: this._tier,
       rawScore: this._rawScore,
+      appearance: this._appearance,
       actualPoints: this._actualPoints,
       scoredAt: this._scoredAt ? this._scoredAt.toISOString() : null,
     };

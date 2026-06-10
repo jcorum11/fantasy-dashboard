@@ -57,7 +57,7 @@ export function parseFantasyProsPage(
     dayTables++;
 
     const gameDate = parseDaySubhead(stripTags(subhead[1]), pickDate);
-    const seen = new Set<string>();
+    const occurrences = new Map<string, number>();
 
     for (const row of table[1].matchAll(PLAYER_ROW_RE)) {
       const rowHtml = row[1];
@@ -72,13 +72,9 @@ export function parseFantasyProsPage(
       const vbr = cells[0];
       if (!/^\d+$/.test(vbr ?? "")) continue; // unranked ("—") rows
 
-      if (seen.has(pitcherName)) {
-        throw new Error(
-          `FantasyPros lists ${pitcherName} twice on ` +
-            `${gameDate.toISOString().split("T")[0]} — doubleheader?`
-        );
-      }
-      seen.add(pitcherName);
+      // Doubleheaders: a second same-day row becomes appearance 2.
+      const appearance = (occurrences.get(pitcherName) ?? 0) + 1;
+      occurrences.set(pitcherName, appearance);
 
       const matchup = rowHtml.match(MATCHUP_RE);
 
@@ -92,6 +88,7 @@ export function parseFantasyProsPage(
           opponent: matchup ? matchup[2] : null,
           isHome: matchup ? matchup[1] !== "@" : null,
           rank: Number(vbr),
+          appearance,
         })
       );
     }

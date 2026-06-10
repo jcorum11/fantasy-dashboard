@@ -108,6 +108,7 @@ describe("StreamingPick", () => {
         rank: 4,
         tier: null,
         rawScore: 78.5,
+        appearance: 1,
         actualPoints: null,
         scoredAt: null,
       });

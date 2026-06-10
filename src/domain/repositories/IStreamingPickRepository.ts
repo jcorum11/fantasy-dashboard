@@ -27,4 +27,6 @@ export interface IStreamingPickRepository {
     pitcherName: string,
     actualPoints: number | null
   ): Promise<void>;
+  /** Distinct game dates strictly before `beforeDate` with unscored picks. */
+  findUnscoredGameDates(beforeDate: Date): Promise<Date[]>;
 }

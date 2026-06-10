@@ -104,16 +104,19 @@ describe("parseDailyWaiversRecords", () => {
     expect(mystery.rank).toBe(3);
   });
 
-  it("throws when a pitcher appears twice on one game date — doubleheader guard", () => {
-    expect(() =>
-      parseDailyWaiversRecords(
-        [
-          makeRecord({ name: "Michael King", dwScore: 60 }),
-          makeRecord({ name: "Michael King", dwScore: 55 }),
-        ],
-        PICK_DATE
-      )
-    ).toThrow(/twice|duplicate/i);
+  it("keeps both records when a pitcher appears twice on one game date (doubleheader)", () => {
+    const picks = parseDailyWaiversRecords(
+      [
+        makeRecord({ name: "Michael King", dwScore: 60 }),
+        makeRecord({ name: "Michael King", dwScore: 55 }),
+      ],
+      PICK_DATE
+    );
+
+    expect(picks.map((p) => [p.rawScore, p.rank, p.appearance])).toEqual([
+      [60, 1, 1],
+      [55, 2, 2],
+    ]);
   });
 
   it("throws when EVERY record is scoreless — dwScore field rename/drift guard", () => {

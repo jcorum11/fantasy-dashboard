@@ -24,6 +24,18 @@ describe("rowToStreamingPick", () => {
     expect(pick.pickDate.toISOString()).toBe("2026-06-10T00:00:00.000Z");
   });
 
+  it("handles DATE columns returned as JS Date objects (neon/node-postgres)", () => {
+    const pick = rowToStreamingPick(
+      buildPickRow({
+        game_date: new Date("2026-06-10T04:00:00.000Z") as unknown as string,
+        pick_date: new Date("2026-06-09T04:00:00.000Z") as unknown as string,
+      })
+    );
+
+    expect(pick.gameDate.toISOString()).toBe("2026-06-10T00:00:00.000Z");
+    expect(pick.pickDate.toISOString()).toBe("2026-06-09T00:00:00.000Z");
+  });
+
   it("coerces NUMERIC raw_score returned as a string to a number", () => {
     const pick = rowToStreamingPick(buildPickRow({ raw_score: "78.50" }));
     expect(pick.rawScore).toBe(78.5);

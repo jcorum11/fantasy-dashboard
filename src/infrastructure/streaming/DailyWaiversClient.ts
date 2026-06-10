@@ -62,16 +62,6 @@ export function parseDailyWaiversRecords(
 
   const picks: StreamingPick[] = [];
   for (const [gameDate, day] of byGameDate) {
-    const seen = new Set<string>();
-    for (const record of day) {
-      if (seen.has(record.player.name)) {
-        throw new Error(
-          `DailyWaivers lists ${record.player.name} twice on ${gameDate} — doubleheader?`
-        );
-      }
-      seen.add(record.player.name);
-    }
-
     day.sort((a, b) => {
       const scoreA = a.dwScore ?? -Infinity;
       const scoreB = b.dwScore ?? -Infinity;
@@ -79,7 +69,12 @@ export function parseDailyWaiversRecords(
       return a.player.name.localeCompare(b.player.name);
     });
 
+    const occurrences = new Map<string, number>();
     day.forEach((record, index) => {
+      // Doubleheaders: a second same-day record becomes appearance 2.
+      const appearance = (occurrences.get(record.player.name) ?? 0) + 1;
+      occurrences.set(record.player.name, appearance);
+
       picks.push(
         StreamingPick.create({
           resource: "dailywaivers",
@@ -91,6 +86,7 @@ export function parseDailyWaiversRecords(
           isHome: record.is_home,
           rank: index + 1,
           rawScore: record.dwScore ?? null,
+          appearance,
         })
       );
     });

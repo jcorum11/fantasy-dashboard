@@ -112,15 +112,21 @@ describe("parsePitcherListArticle", () => {
     expect(obrien.gameDate.toISOString()).toBe("2026-06-11T00:00:00.000Z");
   });
 
-  it("throws when a pitcher appears twice on one game date — doubleheader guard", () => {
+  it("keeps both listings when a pitcher appears twice on one game date (doubleheader)", () => {
+    // Real case: the 2026-04-05 article listed Edward Cabrera twice.
     const doubled = `
 <p style="text-align: center;"><span style="font-size: 24pt; color: #333399;">Wednesday 6/10 Starting Pitcher Streamer Rankings</span></p>
 <p><span style="color: #3366ff; font-size: 20pt;">Auto-Starts</span></p>
 <p><strong><a class="player-tag" href="https://pitcherlist.com/player/shohei-ohtani/">Shohei Ohtani</a> @ PIT &#8211; </strong>Game one.</p>
 <p><strong><a class="player-tag" href="https://pitcherlist.com/player/shohei-ohtani/">Shohei Ohtani</a> @ PIT &#8211; </strong>Game two.</p>`;
-    expect(() => parsePitcherListArticle(doubled, POST_DATE)).toThrow(
-      /twice|duplicate/i
-    );
+
+    const doubledPicks = parsePitcherListArticle(doubled, POST_DATE);
+    expect(
+      doubledPicks.map((p) => [p.pitcherName, p.rank, p.appearance])
+    ).toEqual([
+      ["Shohei Ohtani", 1, 1],
+      ["Shohei Ohtani", 2, 2],
+    ]);
   });
 
   it("throws when no day headers are present — markup drift guard", () => {

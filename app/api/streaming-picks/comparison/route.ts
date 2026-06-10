@@ -8,6 +8,8 @@ if (!process.env.DATABASE_URL) {
 }
 container.initialize(process.env.DATABASE_URL);
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
