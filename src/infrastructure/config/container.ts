@@ -2,6 +2,7 @@ import { IMLBClient } from "../../domain/interfaces/IMLBClient";
 import { MLBClient } from "../mlb/MLBClient";
 import { PlayerStatsService } from "../../application/services/PlayerStatsService";
 import { StreamingPickIngestService } from "../../application/services/StreamingPickIngestService";
+import { StreamingPickScoringService } from "../../application/services/StreamingPickScoringService";
 import { IStreamingPickRepository } from "../../domain/repositories/IStreamingPickRepository";
 import { PostgresStreamingPickRepository } from "../repositories/PostgresStreamingPickRepository";
 import { DailyWaiversClient } from "../streaming/DailyWaiversClient";
@@ -14,6 +15,8 @@ export class Container {
   private playerStatsService: PlayerStatsService | null = null;
   private streamingPickRepository: IStreamingPickRepository | null = null;
   private streamingPickIngestService: StreamingPickIngestService | null = null;
+  private streamingPickScoringService: StreamingPickScoringService | null =
+    null;
 
   private constructor() {}
 
@@ -39,6 +42,10 @@ export class Container {
         pitcherlist: new PitcherListClient(),
         dailywaivers: new DailyWaiversClient(),
       },
+      this.streamingPickRepository
+    );
+    this.streamingPickScoringService = new StreamingPickScoringService(
+      this.playerStatsService,
       this.streamingPickRepository
     );
   }
@@ -69,5 +76,12 @@ export class Container {
       throw new Error("Container not initialized");
     }
     return this.streamingPickIngestService;
+  }
+
+  public getStreamingPickScoringService(): StreamingPickScoringService {
+    if (!this.streamingPickScoringService) {
+      throw new Error("Container not initialized");
+    }
+    return this.streamingPickScoringService;
   }
 }

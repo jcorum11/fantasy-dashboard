@@ -35,6 +35,8 @@ export class PostgresStreamingPickRepository
           rank INTEGER,
           tier VARCHAR(100),
           raw_score NUMERIC,
+          actual_points FLOAT,
+          scored_at TIMESTAMP WITH TIME ZONE,
           created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
           UNIQUE (resource, game_date, pitcher_name)
         );
@@ -55,6 +57,29 @@ export class PostgresStreamingPickRepository
         `Failed to create streaming_picks table: ${
           error?.message || "Unknown error"
         }`
+      );
+    }
+  }
+
+  async updateActualPoints(
+    resource: StreamingResource,
+    gameDate: Date,
+    pitcherName: string,
+    actualPoints: number | null
+  ): Promise<void> {
+    try {
+      // NULL points with scored_at set = "scored, didn't pitch" — distinct
+      // from scored_at NULL (not yet scored).
+      await this.sql`
+        UPDATE streaming_picks
+        SET actual_points = ${actualPoints}, scored_at = CURRENT_TIMESTAMP
+        WHERE resource = ${resource}
+          AND game_date = ${gameDate.toISOString().split("T")[0]}::date
+          AND pitcher_name = ${pitcherName}
+      `;
+    } catch (error: any) {
+      throw new Error(
+        `Failed to update actual points: ${error?.message || "Unknown error"}`
       );
     }
   }

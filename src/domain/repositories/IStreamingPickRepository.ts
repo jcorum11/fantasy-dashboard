@@ -17,4 +17,14 @@ export interface IStreamingPickRepository {
     endDate: Date,
     resource?: StreamingResource
   ): Promise<StreamingPick[]>;
+  /**
+   * Writes a pick's realized result. NULL points with scored_at set means
+   * "scored, didn't pitch"; scored_at NULL means not yet scored.
+   */
+  updateActualPoints(
+    resource: StreamingResource,
+    gameDate: Date,
+    pitcherName: string,
+    actualPoints: number | null
+  ): Promise<void>;
 }

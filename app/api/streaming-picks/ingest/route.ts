@@ -29,11 +29,24 @@ export async function GET(request: NextRequest) {
       .getStreamingPickIngestService()
       .ingest(pickDate);
 
+    // Yesterday's games are final by the time the cron fires (17:00 UTC) —
+    // score those picks against actual results in the same run.
+    const yesterday = new Date(pickDate.getTime() - 24 * 60 * 60 * 1000);
+    let scoring = null;
+    try {
+      scoring = await container
+        .getStreamingPickScoringService()
+        .scoreGameDate(yesterday);
+    } catch (error: any) {
+      console.error("Error scoring yesterday's picks:", error);
+      scoring = { error: error?.message || "Unknown error" };
+    }
+
     // Partial failure is a report, not an error — the surviving resources'
     // picks are persisted and the failures are visible per-resource.
     const allFailed = summary.results.every((r) => r.status === "failure");
     return NextResponse.json(
-      { pickDate: today, ...summary },
+      { pickDate: today, ...summary, scoring },
       { status: allFailed ? 500 : 200 }
     );
   } catch (error: any) {
