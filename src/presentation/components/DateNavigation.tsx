@@ -6,6 +6,7 @@ interface DateNavigationProps {
   onPreviousDay: () => void;
   onNextDay: () => void;
   canNavigateNext: boolean;
+  label?: string;
 }
 
 export function DateNavigation({
@@ -14,13 +15,14 @@ export function DateNavigation({
   onPreviousDay,
   onNextDay,
   canNavigateNext,
+  label = "Top Performers for",
 }: DateNavigationProps) {
   const formattedDate = format(currentDate, "MMM d, yyyy");
 
   return (
     <div className="flex items-center gap-4">
       <p className="text-lg text-slate-500 font-medium">
-        Top Performers for{" "}
+        {label}{" "}
         <span className="font-semibold text-slate-700">{formattedDate}</span>
       </p>
 

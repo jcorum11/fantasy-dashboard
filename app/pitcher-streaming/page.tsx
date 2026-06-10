@@ -1,8 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { format } from "date-fns";
 import { ComparisonReport } from "@/src/application/services/StreamingComparisonService";
+import { DailyBreakdown } from "@/src/application/services/DailyBreakdownService";
+import { DateNavigation } from "@/src/presentation/components/DateNavigation";
 import { ComparisonGrid } from "@/src/presentation/streaming/ComparisonGrid";
+import { DailyBreakdownTable } from "@/src/presentation/streaming/DailyBreakdownTable";
 import { ResourceHealth } from "@/src/presentation/streaming/ResourceHealth";
 import { TierBreakdown } from "@/src/presentation/streaming/TierBreakdown";
 import {
@@ -17,11 +21,33 @@ const PRESETS: { value: RangePreset; label: string }[] = [
   { value: "7", label: "Last 7 days" },
 ];
 
+function yesterday(): Date {
+  return new Date(Date.now() - 24 * 60 * 60 * 1000);
+}
+
 export default function PitcherStreaming() {
   const [preset, setPreset] = useState<RangePreset>("season");
   const [report, setReport] = useState<ComparisonReport | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [dailyDate, setDailyDate] = useState<Date>(yesterday);
+  const [daily, setDaily] = useState<DailyBreakdown | null>(null);
+  const [isDailyLoading, setIsDailyLoading] = useState(true);
+
+  useEffect(() => {
+    setIsDailyLoading(true);
+    fetch(
+      `/api/streaming-picks/daily?date=${format(dailyDate, "yyyy-MM-dd")}`,
+      { cache: "no-store" }
+    )
+      .then(async (res) => {
+        if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+        setDaily(await res.json());
+      })
+      .catch(() => setDaily(null))
+      .finally(() => setIsDailyLoading(false));
+  }, [dailyDate]);
 
   useEffect(() => {
     const { startDate, endDate } = presetRange(preset, new Date());
@@ -94,6 +120,43 @@ export default function PitcherStreaming() {
             list per resource, so differently-sized lists stay comparable.
             {" "}Range: {report.startDate} → {report.endDate}.
           </p>
+
+          <section className="space-y-4 border-t border-slate-200 pt-6">
+            <h2 className="text-xl font-bold text-slate-900">
+              Daily winners &amp; losers
+            </h2>
+            <p className="text-sm text-slate-600">
+              Every listed pitcher with each resource&apos;s call and the
+              actual result. W = correct call (a high pick that hit, or a low
+              pick that bombed); L = wrong call (a high pick that bombed, or
+              a buried gem).
+            </p>
+            <DateNavigation
+              label="Streaming picks for"
+              currentDate={dailyDate}
+              isLoading={isDailyLoading}
+              onPreviousDay={() =>
+                setDailyDate(new Date(dailyDate.getTime() - 24 * 60 * 60 * 1000))
+              }
+              onNextDay={() =>
+                setDailyDate(new Date(dailyDate.getTime() + 24 * 60 * 60 * 1000))
+              }
+              canNavigateNext={
+                dailyDate.getTime() < Date.now() - 24 * 60 * 60 * 1000
+              }
+            />
+            {isDailyLoading && (
+              <p className="text-slate-500">Loading daily breakdown…</p>
+            )}
+            {!isDailyLoading && daily && daily.pitchers.length > 0 && (
+              <div className="overflow-x-auto rounded-lg border border-slate-200">
+                <DailyBreakdownTable breakdown={daily} />
+              </div>
+            )}
+            {!isDailyLoading && daily && daily.pitchers.length === 0 && (
+              <p className="text-slate-500">No picks recorded for this date.</p>
+            )}
+          </section>
         </div>
       )}
     </main>
