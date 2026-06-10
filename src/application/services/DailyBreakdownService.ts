@@ -133,9 +133,10 @@ export class DailyBreakdownService {
   }
 
   /**
-   * Relative-to-rank verdict: a win is ANY pick that delivered; a loss is
-   * only a high-bucket pick that bombed (a Do-Not-Start that bombs was a
-   * correct call). Unscored picks carry no verdict.
+   * Pure bucketing skill, both directions ("avoid bombs and pick hits"):
+   * a correct call wins whether it's a high-bucket hit OR a low-bucket
+   * bomb; a wrong call loses whether it's a high-bucket bomb OR a buried
+   * gem. Mid bucket carries no claim. Unscored picks carry no verdict.
    */
   private verdictFor(
     pick: StreamingPick,
@@ -144,8 +145,12 @@ export class DailyBreakdownService {
     bomb: number
   ): Verdict | null {
     if (pick.actualPoints === null) return null;
-    if (pick.actualPoints >= goodStart) return "win";
-    if (bucket === "high" && pick.actualPoints < bomb) return "loss";
+    const hit = pick.actualPoints >= goodStart;
+    const bombed = pick.actualPoints < bomb;
+    if (bucket === "high" && hit) return "win";
+    if (bucket === "high" && bombed) return "loss";
+    if (bucket === "low" && bombed) return "win";
+    if (bucket === "low" && hit) return "loss";
     return "neutral";
   }
 }

@@ -22,10 +22,13 @@ import {
 //     record: { [resource]: { wins, losses } },  // always all three
 //   }
 //
-// Verdict rules (Jacob's "relative to rank" definition):
-//   - win    = scored pick with actualPoints >= goodStart (any bucket)
-//   - loss   = HIGH-bucket pick with actualPoints < bomb
-//   - neutral = everything else scored
+// Verdict rules (Jacob's call: PURE BUCKETING SKILL, both directions —
+// "avoid bombs and pick hits", correct placement outweighs delivery):
+//   - win  = high bucket + good start (>= goodStart)  [called the hit]
+//          | low bucket + bomb (< bomb)               [called the avoid]
+//   - loss = high bucket + bomb                       [sold you a dud]
+//          | low bucket + good start                  [buried a gem]
+//   - neutral = mid bucket, or outcomes between bomb and goodStart
 //   - no verdict (null) when the pick is pending or no-show
 // Buckets come from the shared per-day tercile assignment, per resource.
 
@@ -55,33 +58,34 @@ describe("DailyBreakdownService", () => {
     expect(sale.calls.fantasypros).toBeUndefined();
   });
 
-  it("marks any pick that delivered a good start as a win", async () => {
+  it("rewards correct bucket calls in both directions", async () => {
     const result = await service([
-      pick({ pitcherName: "Low Pick", rank: 3, actualPoints: 22 }),
-      pick({ pitcherName: "Mid Pick", rank: 2, actualPoints: 3 }),
-      pick({ pitcherName: "High Pick", rank: 1, actualPoints: 16 }),
-    ]).breakdown(GAME_DATE);
-
-    const verdicts = Object.fromEntries(
-      result.pitchers.map((p) => [p.pitcherName, p.calls.dailywaivers?.verdict])
-    );
-    expect(verdicts["Low Pick"]).toBe("win"); // delivered despite low rank
-    expect(verdicts["High Pick"]).toBe("win");
-  });
-
-  it("marks only HIGH-bucket picks that bombed as losses", async () => {
-    const result = await service([
-      pick({ pitcherName: "High Bomb", rank: 1, actualPoints: 2 }),
-      pick({ pitcherName: "Mid Bomb", rank: 2, actualPoints: 1 }),
+      pick({ pitcherName: "High Hit", rank: 1, actualPoints: 16 }),
+      pick({ pitcherName: "Mid Guy", rank: 2, actualPoints: 22 }),
       pick({ pitcherName: "Low Bomb", rank: 3, actualPoints: -4 }),
     ]).breakdown(GAME_DATE);
 
     const verdicts = Object.fromEntries(
       result.pitchers.map((p) => [p.pitcherName, p.calls.dailywaivers?.verdict])
     );
-    expect(verdicts["High Bomb"]).toBe("loss");
-    expect(verdicts["Mid Bomb"]).toBe("neutral"); // bombed, but wasn't sold as high
-    expect(verdicts["Low Bomb"]).toBe("neutral"); // correct avoid-call
+    expect(verdicts["High Hit"]).toBe("win"); // called the hit
+    expect(verdicts["Low Bomb"]).toBe("win"); // called the avoid
+    expect(verdicts["Mid Guy"]).toBe("neutral"); // mid carries no claim
+  });
+
+  it("punishes wrong bucket calls in both directions", async () => {
+    const result = await service([
+      pick({ pitcherName: "High Bomb", rank: 1, actualPoints: 2 }),
+      pick({ pitcherName: "Mid Bomb", rank: 2, actualPoints: 1 }),
+      pick({ pitcherName: "Buried Gem", rank: 3, actualPoints: 22 }),
+    ]).breakdown(GAME_DATE);
+
+    const verdicts = Object.fromEntries(
+      result.pitchers.map((p) => [p.pitcherName, p.calls.dailywaivers?.verdict])
+    );
+    expect(verdicts["High Bomb"]).toBe("loss"); // sold you a dud
+    expect(verdicts["Buried Gem"]).toBe("loss"); // told you to avoid a hit
+    expect(verdicts["Mid Bomb"]).toBe("neutral");
   });
 
   it("scores between bomb and goodStart as neutral even in the high bucket", async () => {
@@ -123,18 +127,17 @@ describe("DailyBreakdownService", () => {
 
   it("tallies each resource's day record from its own verdicts", async () => {
     const result = await service([
-      // DW: a win and a high-bucket bomb (2-pick day buckets high+mid, so
-      // the dud must be rank 1 to sit in DW's high bucket)
+      // DW sold the dud high (loss); its ace sits mid (neutral)
       pick({ pitcherName: "Dud", resource: "dailywaivers", rank: 1, actualPoints: 1 }),
       pick({ pitcherName: "Ace", resource: "dailywaivers", rank: 2, actualPoints: 25 }),
-      // PL ranked the same dud LOW — correct call, no loss
+      // PL: ace high (win), mid neutral, dud correctly buried low (win)
       pick({ pitcherName: "Ace", resource: "pitcherlist", rank: 1, actualPoints: 25 }),
       pick({ pitcherName: "Mid", resource: "pitcherlist", rank: 2, actualPoints: 10 }),
       pick({ pitcherName: "Dud", resource: "pitcherlist", rank: 3, actualPoints: 1 }),
     ]).breakdown(GAME_DATE);
 
-    expect(result.record.dailywaivers).toEqual({ wins: 1, losses: 1 });
-    expect(result.record.pitcherlist).toEqual({ wins: 1, losses: 0 });
+    expect(result.record.dailywaivers).toEqual({ wins: 0, losses: 1 });
+    expect(result.record.pitcherlist).toEqual({ wins: 2, losses: 0 });
     expect(result.record.fantasypros).toEqual({ wins: 0, losses: 0 });
   });
 
