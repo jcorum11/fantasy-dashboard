@@ -134,9 +134,11 @@ export class DailyBreakdownService {
 
   /**
    * Pure bucketing skill, both directions ("avoid bombs and pick hits"):
-   * a correct call wins whether it's a high-bucket hit OR a low-bucket
-   * bomb; a wrong call loses whether it's a high-bucket bomb OR a buried
-   * gem. Mid bucket carries no claim. Unscored picks carry no verdict.
+   * correct calls win, wrong calls lose, no-claim picks stay neutral.
+   * The claim graded is the resource's NATIVE one — Pitcher List's tier
+   * (Questionable is "if you're desperate", an avoid) rather than the
+   * tercile position, which can misread short-tier days (the 6/9 Cease/
+   * May case). Untiered resources are graded on their tercile bucket.
    */
   private verdictFor(
     pick: StreamingPick,
@@ -145,12 +147,38 @@ export class DailyBreakdownService {
     bomb: number
   ): Verdict | null {
     if (pick.actualPoints === null) return null;
+
+    const claim = this.claimFor(pick.tier, bucket);
+    if (claim === null) return "neutral";
+
     const hit = pick.actualPoints >= goodStart;
     const bombed = pick.actualPoints < bomb;
-    if (bucket === "high" && hit) return "win";
-    if (bucket === "high" && bombed) return "loss";
-    if (bucket === "low" && bombed) return "win";
-    if (bucket === "low" && hit) return "loss";
+    if (claim === "start" && hit) return "win";
+    if (claim === "start" && bombed) return "loss";
+    if (claim === "avoid" && bombed) return "win";
+    if (claim === "avoid" && hit) return "loss";
     return "neutral";
+  }
+
+  private claimFor(
+    tier: string | null,
+    bucket: RankBucket
+  ): "start" | "avoid" | null {
+    if (tier !== null) {
+      const label = tier.toLowerCase();
+      if (label.startsWith("auto-start") || label.startsWith("probably start")) {
+        return "start";
+      }
+      if (
+        label.startsWith("questionable start") ||
+        label.startsWith("do not start")
+      ) {
+        return "avoid";
+      }
+      // unknown tier label — fall through to the tercile bucket
+    }
+    if (bucket === "high") return "start";
+    if (bucket === "low") return "avoid";
+    return null;
   }
 }

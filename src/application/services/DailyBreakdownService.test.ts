@@ -23,14 +23,19 @@ import {
 //   }
 //
 // Verdict rules (Jacob's call: PURE BUCKETING SKILL, both directions —
-// "avoid bombs and pick hits", correct placement outweighs delivery):
-//   - win  = high bucket + good start (>= goodStart)  [called the hit]
-//          | low bucket + bomb (< bomb)               [called the avoid]
-//   - loss = high bucket + bomb                       [sold you a dud]
-//          | low bucket + good start                  [buried a gem]
-//   - neutral = mid bucket, or outcomes between bomb and goodStart
+// "avoid bombs and pick hits", correct placement outweighs delivery).
+// The CLAIM being graded is the resource's NATIVE one:
+//   - tiered picks (Pitcher List): Auto-Starts/Probably Starts = start
+//     claim; Questionable Starts ("if you're desperate") and Do Not
+//     Starts = avoid claim. Singular labels count too. Unknown tiers
+//     fall back to the tercile bucket.
+//   - untiered picks (DW/FP): tercile bucket — high = start claim,
+//     low = avoid claim, mid = no claim.
+// Then:
+//   - win  = start claim + good start | avoid claim + bomb
+//   - loss = start claim + bomb       | avoid claim + good start
+//   - neutral = no claim, or outcomes between bomb and goodStart
 //   - no verdict (null) when the pick is pending or no-show
-// Buckets come from the shared per-day tercile assignment, per resource.
 
 function service(picks: any[]) {
   return new DailyBreakdownService(makeRepository(picks));
@@ -139,6 +144,47 @@ describe("DailyBreakdownService", () => {
     expect(result.record.dailywaivers).toEqual({ wins: 0, losses: 1 });
     expect(result.record.pitcherlist).toEqual({ wins: 2, losses: 0 });
     expect(result.record.fantasypros).toEqual({ wins: 0, losses: 0 });
+  });
+
+  it("grades tiered picks on their native tier claim, not their tercile position", async () => {
+    // The real 6/9 case: a short Auto/Probably day pushed Questionable
+    // pitchers into the high TERCILE — but PL's claim was still "avoid".
+    const result = await service([
+      pick({ pitcherName: "Dustin May", resource: "pitcherlist", rank: 1, tier: "Questionable Starts", actualPoints: 37.5 }),
+      pick({ pitcherName: "Dylan Cease", resource: "pitcherlist", rank: 2, tier: "Questionable Starts", actualPoints: 42.8 }),
+      pick({ pitcherName: "Quiet Avoid", resource: "pitcherlist", rank: 3, tier: "Questionable Starts", actualPoints: 1 }),
+    ]).breakdown(GAME_DATE);
+
+    const verdicts = Object.fromEntries(
+      result.pitchers.map((p) => [p.pitcherName, p.calls.pitcherlist?.verdict])
+    );
+    expect(verdicts["Dustin May"]).toBe("loss"); // buried gem, despite high tercile
+    expect(verdicts["Dylan Cease"]).toBe("loss"); // buried gem
+    expect(verdicts["Quiet Avoid"]).toBe("win"); // correct avoid
+  });
+
+  it("grades start-claim tiers in both directions", async () => {
+    const result = await service([
+      pick({ pitcherName: "Auto Hit", resource: "pitcherlist", rank: 1, tier: "Auto-Starts", actualPoints: 20 }),
+      pick({ pitcherName: "Probably Bomb", resource: "pitcherlist", rank: 2, tier: "Probably Starts", actualPoints: 2 }),
+      pick({ pitcherName: "DNS Bomb", resource: "pitcherlist", rank: 3, tier: "Do Not Start", actualPoints: -3 }),
+    ]).breakdown(GAME_DATE);
+
+    const verdicts = Object.fromEntries(
+      result.pitchers.map((p) => [p.pitcherName, p.calls.pitcherlist?.verdict])
+    );
+    expect(verdicts["Auto Hit"]).toBe("win");
+    expect(verdicts["Probably Bomb"]).toBe("loss");
+    expect(verdicts["DNS Bomb"]).toBe("win"); // singular label counts
+  });
+
+  it("falls back to the tercile bucket for unknown tier labels", async () => {
+    const result = await service([
+      pick({ pitcherName: "Mystery Tier", resource: "pitcherlist", rank: 1, tier: "Some New Tier", actualPoints: 20 }),
+    ]).breakdown(GAME_DATE);
+
+    // single pick -> high tercile -> start claim -> hit -> win
+    expect(result.pitchers[0].calls.pitcherlist?.verdict).toBe("win");
   });
 
   it("applies custom thresholds", async () => {
