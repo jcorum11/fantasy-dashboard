@@ -1,6 +1,7 @@
 import { neon, neonConfig } from "@neondatabase/serverless";
 import format from "pg-format";
 import { IStreamingPickRepository } from "../../domain/repositories/IStreamingPickRepository";
+import { IngestRun } from "../../domain/models/IngestRun";
 import { StreamingPick } from "../../domain/models/StreamingPick";
 import { StreamingResource } from "../../domain/models/StreamingResource";
 import {
@@ -38,11 +39,67 @@ export class PostgresStreamingPickRepository
           UNIQUE (resource, game_date, pitcher_name)
         );
       `;
+      await this.sql`
+        CREATE TABLE IF NOT EXISTS ingest_runs (
+          id SERIAL PRIMARY KEY,
+          resource VARCHAR(50) NOT NULL,
+          run_date DATE NOT NULL,
+          status VARCHAR(20) NOT NULL,
+          picks_count INTEGER NOT NULL DEFAULT 0,
+          error TEXT,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+      `;
     } catch (error: any) {
       throw new Error(
         `Failed to create streaming_picks table: ${
           error?.message || "Unknown error"
         }`
+      );
+    }
+  }
+
+  async recordIngestRun(run: IngestRun): Promise<void> {
+    try {
+      await this.sql`
+        INSERT INTO ingest_runs (resource, run_date, status, picks_count, error)
+        VALUES (
+          ${run.resource},
+          ${run.runDate.toISOString().split("T")[0]},
+          ${run.status},
+          ${run.picksCount},
+          ${run.error}
+        )
+      `;
+    } catch (error: any) {
+      throw new Error(
+        `Failed to record ingest run: ${error?.message || "Unknown error"}`
+      );
+    }
+  }
+
+  async findIngestRuns(startDate: Date, endDate: Date): Promise<IngestRun[]> {
+    try {
+      const start = startDate.toISOString().split("T")[0];
+      const end = endDate.toISOString().split("T")[0];
+
+      const rows = await this.sql`
+        SELECT resource, run_date, status, picks_count, error
+        FROM ingest_runs
+        WHERE run_date BETWEEN ${start}::date AND ${end}::date
+        ORDER BY run_date, resource, id
+      `;
+
+      return rows.map((row: any) => ({
+        resource: row.resource,
+        runDate: new Date(`${String(row.run_date).split("T")[0]}T00:00:00Z`),
+        status: row.status,
+        picksCount: row.picks_count,
+        error: row.error,
+      }));
+    } catch (error: any) {
+      throw new Error(
+        `Failed to find ingest runs: ${error?.message || "Unknown error"}`
       );
     }
   }

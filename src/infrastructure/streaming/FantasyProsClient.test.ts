@@ -160,12 +160,22 @@ describe("FantasyProsClient", () => {
       expect(picks[0].resource).toBe("fantasypros");
     });
 
-    it("throws a resource-named error on a non-ok response (Cloudflare 403)", async () => {
-      fetchMock.mockResolvedValueOnce(errorResponse(403));
+    it("does not retry a Cloudflare 403", async () => {
+      fetchMock.mockResolvedValue(errorResponse(403));
 
       await expect(
-        new FantasyProsClient().fetchPicks(PICK_DATE)
+        new FantasyProsClient({ retries: 3, delayMs: 0 }).fetchPicks(PICK_DATE)
       ).rejects.toThrow(/FantasyPros.*403/i);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("retries 5xx responses and throws after exhausting attempts", async () => {
+      fetchMock.mockResolvedValue(errorResponse(502));
+
+      await expect(
+        new FantasyProsClient({ retries: 3, delayMs: 0 }).fetchPicks(PICK_DATE)
+      ).rejects.toThrow(/FantasyPros.*502/i);
+      expect(fetchMock).toHaveBeenCalledTimes(3);
     });
   });
 });

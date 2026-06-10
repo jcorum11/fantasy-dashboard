@@ -1,5 +1,11 @@
 import { StreamingPick } from "@/src/domain/models/StreamingPick";
 import { decodeEntities, stripTags } from "@/src/infrastructure/streaming/htmlText";
+import {
+  DEFAULT_RETRY_OPTIONS,
+  fetchOk,
+  RetryOptions,
+  withRetry,
+} from "@/src/infrastructure/streaming/retry";
 
 const PAGE_URL = "https://www.fantasypros.com/mlb/streaming-pitchers.php";
 // Default agents get bot-filtered; a desktop browser UA returns the page.
@@ -102,13 +108,18 @@ export function parseFantasyProsPage(
 }
 
 export class FantasyProsClient {
+  constructor(
+    private readonly retryOptions: RetryOptions = DEFAULT_RETRY_OPTIONS
+  ) {}
+
   public async fetchPicks(pickDate: Date): Promise<StreamingPick[]> {
-    const res = await fetch(PAGE_URL, {
-      headers: { "User-Agent": BROWSER_UA },
-    });
-    if (!res.ok) {
-      throw new Error(`FantasyPros request failed: ${res.status}`);
-    }
+    const res = await withRetry(
+      () =>
+        fetchOk("FantasyPros", PAGE_URL, {
+          headers: { "User-Agent": BROWSER_UA },
+        }),
+      this.retryOptions
+    );
 
     return parseFantasyProsPage(await res.text(), pickDate);
   }

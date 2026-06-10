@@ -174,12 +174,22 @@ describe("PitcherListClient", () => {
       expect(ARTICLE_POST_DATE.startsWith("2026-06-10")).toBe(true);
     });
 
-    it("throws a resource-named error on a non-ok response", async () => {
-      fetchMock.mockResolvedValueOnce(errorResponse(503));
+    it("retries 5xx responses and throws after exhausting attempts", async () => {
+      fetchMock.mockResolvedValue(errorResponse(503));
 
-      await expect(new PitcherListClient().fetchPicks()).rejects.toThrow(
-        /Pitcher List.*503/i
-      );
+      await expect(
+        new PitcherListClient({ retries: 3, delayMs: 0 }).fetchPicks()
+      ).rejects.toThrow(/Pitcher List.*503/i);
+      expect(fetchMock).toHaveBeenCalledTimes(3);
+    });
+
+    it("does not retry 4xx responses", async () => {
+      fetchMock.mockResolvedValue(errorResponse(404));
+
+      await expect(
+        new PitcherListClient({ retries: 3, delayMs: 0 }).fetchPicks()
+      ).rejects.toThrow(/Pitcher List.*404/i);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
     });
 
     it("throws when the category has no posts", async () => {

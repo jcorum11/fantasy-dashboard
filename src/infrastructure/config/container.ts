@@ -1,11 +1,19 @@
 import { IMLBClient } from "../../domain/interfaces/IMLBClient";
 import { MLBClient } from "../mlb/MLBClient";
 import { PlayerStatsService } from "../../application/services/PlayerStatsService";
+import { StreamingPickIngestService } from "../../application/services/StreamingPickIngestService";
+import { IStreamingPickRepository } from "../../domain/repositories/IStreamingPickRepository";
+import { PostgresStreamingPickRepository } from "../repositories/PostgresStreamingPickRepository";
+import { DailyWaiversClient } from "../streaming/DailyWaiversClient";
+import { FantasyProsClient } from "../streaming/FantasyProsClient";
+import { PitcherListClient } from "../streaming/PitcherListClient";
 
 export class Container {
   private static instance: Container;
   private mlbClient: IMLBClient | null = null;
   private playerStatsService: PlayerStatsService | null = null;
+  private streamingPickRepository: IStreamingPickRepository | null = null;
+  private streamingPickIngestService: StreamingPickIngestService | null = null;
 
   private constructor() {}
 
@@ -22,6 +30,17 @@ export class Container {
       this.mlbClient,
       databaseUrl
     );
+    this.streamingPickRepository = new PostgresStreamingPickRepository(
+      databaseUrl
+    );
+    this.streamingPickIngestService = new StreamingPickIngestService(
+      {
+        fantasypros: new FantasyProsClient(),
+        pitcherlist: new PitcherListClient(),
+        dailywaivers: new DailyWaiversClient(),
+      },
+      this.streamingPickRepository
+    );
   }
 
   public getMLBClient(): IMLBClient {
@@ -36,5 +55,19 @@ export class Container {
       throw new Error("Container not initialized");
     }
     return this.playerStatsService;
+  }
+
+  public getStreamingPickRepository(): IStreamingPickRepository {
+    if (!this.streamingPickRepository) {
+      throw new Error("Container not initialized");
+    }
+    return this.streamingPickRepository;
+  }
+
+  public getStreamingPickIngestService(): StreamingPickIngestService {
+    if (!this.streamingPickIngestService) {
+      throw new Error("Container not initialized");
+    }
+    return this.streamingPickIngestService;
   }
 }

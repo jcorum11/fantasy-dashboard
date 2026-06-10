@@ -1,4 +1,10 @@
 import { StreamingPick } from "@/src/domain/models/StreamingPick";
+import {
+  DEFAULT_RETRY_OPTIONS,
+  fetchOk,
+  RetryOptions,
+  withRetry,
+} from "@/src/infrastructure/streaming/retry";
 
 const API_BASE = "https://dailywaivers.com/api";
 
@@ -94,6 +100,10 @@ export function parseDailyWaiversRecords(
 }
 
 export class DailyWaiversClient {
+  constructor(
+    private readonly retryOptions: RetryOptions = DEFAULT_RETRY_OPTIONS
+  ) {}
+
   public async fetchPicks(
     startDate: Date,
     endDate: Date,
@@ -105,10 +115,10 @@ export class DailyWaiversClient {
       `&endDate=${toDateParam(endDate)}` +
       `&showRanks=true`;
 
-    const res = await fetch(url);
-    if (!res.ok) {
-      throw new Error(`DailyWaivers request failed: ${res.status}`);
-    }
+    const res = await withRetry(
+      () => fetchOk("DailyWaivers", url),
+      this.retryOptions
+    );
 
     const records: DailyWaiversRecord[] = await res.json();
     return parseDailyWaiversRecords(records, pickDate);

@@ -189,12 +189,30 @@ describe("DailyWaiversClient", () => {
       ]);
     });
 
-    it("throws a resource-named error on a non-ok response", async () => {
-      fetchMock.mockResolvedValueOnce(errorResponse(503));
+    it("retries 5xx responses and throws after exhausting attempts", async () => {
+      fetchMock.mockResolvedValue(errorResponse(503));
 
       await expect(
-        new DailyWaiversClient().fetchPicks(PICK_DATE, PICK_DATE, PICK_DATE)
+        new DailyWaiversClient({ retries: 3, delayMs: 0 }).fetchPicks(
+          PICK_DATE,
+          PICK_DATE,
+          PICK_DATE
+        )
       ).rejects.toThrow(/DailyWaivers.*503/i);
+      expect(fetchMock).toHaveBeenCalledTimes(3);
+    });
+
+    it("does not retry 4xx responses", async () => {
+      fetchMock.mockResolvedValue(errorResponse(403));
+
+      await expect(
+        new DailyWaiversClient({ retries: 3, delayMs: 0 }).fetchPicks(
+          PICK_DATE,
+          PICK_DATE,
+          PICK_DATE
+        )
+      ).rejects.toThrow(/DailyWaivers.*403/i);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
     });
   });
 });

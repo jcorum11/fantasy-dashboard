@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/streaming-picks/ingest",
+      "schedule": "0 17 * * *"
+    }
+  ]
+}

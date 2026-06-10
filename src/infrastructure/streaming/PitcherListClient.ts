@@ -1,5 +1,11 @@
 import { StreamingPick } from "@/src/domain/models/StreamingPick";
 import { stripTags } from "@/src/infrastructure/streaming/htmlText";
+import {
+  DEFAULT_RETRY_OPTIONS,
+  fetchOk,
+  RetryOptions,
+  withRetry,
+} from "@/src/infrastructure/streaming/retry";
 
 const WP_POSTS_URL =
   "https://pitcherlist.com/wp-json/wp/v2/posts?categories=233&per_page=1";
@@ -99,11 +105,15 @@ export function parsePitcherListArticle(
 }
 
 export class PitcherListClient {
+  constructor(
+    private readonly retryOptions: RetryOptions = DEFAULT_RETRY_OPTIONS
+  ) {}
+
   public async fetchPicks(): Promise<StreamingPick[]> {
-    const res = await fetch(WP_POSTS_URL);
-    if (!res.ok) {
-      throw new Error(`Pitcher List request failed: ${res.status}`);
-    }
+    const res = await withRetry(
+      () => fetchOk("Pitcher List", WP_POSTS_URL),
+      this.retryOptions
+    );
 
     const posts = await res.json();
     if (!Array.isArray(posts) || posts.length === 0) {
