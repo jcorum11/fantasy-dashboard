@@ -56,6 +56,16 @@ export function parseDailyWaiversRecords(
 
   const picks: StreamingPick[] = [];
   for (const [gameDate, day] of byGameDate) {
+    const seen = new Set<string>();
+    for (const record of day) {
+      if (seen.has(record.player.name)) {
+        throw new Error(
+          `DailyWaivers lists ${record.player.name} twice on ${gameDate} — doubleheader?`
+        );
+      }
+      seen.add(record.player.name);
+    }
+
     day.sort((a, b) => {
       const scoreA = a.dwScore ?? -Infinity;
       const scoreB = b.dwScore ?? -Infinity;
