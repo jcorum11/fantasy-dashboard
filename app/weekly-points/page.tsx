@@ -49,15 +49,6 @@ function WeeklyPointsContent() {
 
   return (
     <main className="container mx-auto px-4 py-6">
-      <div className="mb-4">
-        <a
-          href="/"
-          className="inline-block px-3 py-2 bg-slate-200 rounded hover:bg-slate-300 text-sm font-medium"
-        >
-          ← Back
-        </a>
-      </div>
-
       <h1 className="text-2xl font-bold mb-4">Weekly Fantasy Points</h1>
 
       <div className="mb-4">

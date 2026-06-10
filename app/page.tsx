@@ -18,14 +18,6 @@ export default function Home() {
   const [viewType, setViewType] = useState<"batting" | "pitching">("batting");
   const [platform, setPlatform] = useState<Platform>("yahoo");
 
-  // Determine the active MLB season – same heuristic used across the app:
-  //   • November–February belong to the following season (e.g. Nov 2024 ⇒ 2024 season)
-  //   • March–October map to the current calendar year.
-  const now = new Date();
-  const season =
-    now.getMonth() + 1 <= 2 || now.getMonth() + 1 >= 11
-      ? now.getFullYear() - 1
-      : now.getFullYear();
   const [stats, setStats] = useState<PlayerStats[]>([]);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isLoading, setIsLoading] = useState(false);
@@ -138,18 +130,6 @@ export default function Home() {
       <h1 className="mb-8 text-3xl font-bold text-slate-900">
         MLB Player Stats
       </h1>
-
-      {/* Replacement Level Dashboard removed */}
-
-      {/* Link to Weekly Points Page */}
-      <div className="mb-8">
-        <a
-          href={`/weekly-points?season=${season}`}
-          className="inline-block px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow hover:bg-blue-700 transition-colors"
-        >
-          View Weekly Points Dashboard
-        </a>
-      </div>
 
       <div className="mb-4">
         <PlatformNavigation
