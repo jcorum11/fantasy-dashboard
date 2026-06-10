@@ -25,6 +25,8 @@ export interface SegmentStats {
   picks: number;
   scored: number;
   avgPoints: number | null;
+  /** Fraction of scored picks with actualPoints >= threshold; null when nothing scored. */
+  hitRate: number | null;
 }
 
 export interface ResourceComparison {
@@ -41,7 +43,10 @@ export interface ComparisonReport {
   resources: ResourceComparison[];
 }
 
-function segmentStats(picks: StreamingPick[]): SegmentStats {
+function segmentStats(
+  picks: StreamingPick[],
+  threshold: number
+): SegmentStats {
   const scored = picks.filter((p) => p.actualPoints !== null);
   return {
     picks: picks.length,
@@ -51,6 +56,11 @@ function segmentStats(picks: StreamingPick[]): SegmentStats {
         ? null
         : scored.reduce((sum, p) => sum + (p.actualPoints as number), 0) /
           scored.length,
+    hitRate:
+      scored.length === 0
+        ? null
+        : scored.filter((p) => (p.actualPoints as number) >= threshold)
+            .length / scored.length,
   };
 }
 
@@ -59,7 +69,8 @@ export class StreamingComparisonService {
 
   public async compare(
     startDate: Date,
-    endDate: Date
+    endDate: Date,
+    threshold: number = 15
   ): Promise<ComparisonReport> {
     const [picks, runs] = await Promise.all([
       this.repository.findByGameDateRange(startDate, endDate),
@@ -73,7 +84,8 @@ export class StreamingComparisonService {
         this.compareResource(
           resource,
           picks.filter((p) => p.resource === resource),
-          runs.filter((r) => r.resource === resource)
+          runs.filter((r) => r.resource === resource),
+          threshold
         )
       ),
     };
@@ -82,7 +94,8 @@ export class StreamingComparisonService {
   private compareResource(
     resource: StreamingResource,
     picks: StreamingPick[],
-    runs: IngestRun[]
+    runs: IngestRun[],
+    threshold: number
   ): ResourceComparison {
     return {
       resource,
@@ -91,20 +104,21 @@ export class StreamingComparisonService {
         failedDays: runs.filter((r) => r.status === "failure").length,
       },
       overall: {
-        ...segmentStats(picks),
+        ...segmentStats(picks, threshold),
         unmatched: picks.filter(
           (p) => p.scoredAt !== null && p.actualPoints === null
         ).length,
         pending: picks.filter((p) => p.scoredAt === null).length,
       },
-      byBucket: this.aggregateBuckets(picks),
-      byTier: this.aggregateTiers(picks),
+      byBucket: this.aggregateBuckets(picks, threshold),
+      byTier: this.aggregateTiers(picks, threshold),
     };
   }
 
   /** Buckets via the shared per-day tercile assignment (rankBuckets.ts). */
   private aggregateBuckets(
-    picks: StreamingPick[]
+    picks: StreamingPick[],
+    threshold: number
   ): Array<SegmentStats & { bucket: RankBucket }> {
     const byBucket = new Map<RankBucket, StreamingPick[]>();
     for (const { pick, bucket } of assignBuckets(picks)) {
@@ -114,14 +128,15 @@ export class StreamingComparisonService {
     return BUCKET_ORDER.filter((bucket) => byBucket.has(bucket)).map(
       (bucket) => ({
         bucket,
-        ...segmentStats(byBucket.get(bucket)!),
+        ...segmentStats(byBucket.get(bucket)!, threshold),
       })
     );
   }
 
   /** Native tier labels in first-appearance order; untiered picks omitted. */
   private aggregateTiers(
-    picks: StreamingPick[]
+    picks: StreamingPick[],
+    threshold: number
   ): Array<SegmentStats & { tier: string }> {
     const byTier = new Map<string, StreamingPick[]>();
     for (const pick of picks) {
@@ -131,7 +146,7 @@ export class StreamingComparisonService {
 
     return [...byTier.entries()].map(([tier, tierPicks]) => ({
       tier,
-      ...segmentStats(tierPicks),
+      ...segmentStats(tierPicks, threshold),
     }));
   }
 }

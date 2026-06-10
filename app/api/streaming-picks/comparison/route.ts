@@ -30,9 +30,18 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Yahoo-points bar a start must clear to count as a "hit"
+    const threshold = Number(searchParams.get("threshold") ?? 15);
+    if (isNaN(threshold) || threshold <= 0) {
+      return NextResponse.json(
+        { error: "threshold must be a positive number" },
+        { status: 400 }
+      );
+    }
+
     const report = await container
       .getStreamingComparisonService()
-      .compare(startDate, endDate);
+      .compare(startDate, endDate, threshold);
 
     return NextResponse.json(report);
   } catch (error) {

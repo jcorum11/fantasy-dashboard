@@ -15,15 +15,18 @@ import {
 //     resources: [{                       // ALWAYS all three, stable order:
 //       resource,                          // fantasypros, pitcherlist, dailywaivers
 //       coverage: { successDays, failedDays },        // from ingest_runs
-//       overall: { picks, scored, unmatched, pending, avgPoints },
-//       byBucket: [{ bucket: high|mid|low, picks, scored, avgPoints }],
-//       byTier:   [{ tier, picks, scored, avgPoints }],  // native tiers only
+//       overall: { picks, scored, unmatched, pending, avgPoints, hitRate },
+//       byBucket: [{ bucket: high|mid|low, picks, scored, avgPoints, hitRate }],
+//       byTier:   [{ tier, picks, scored, avgPoints, hitRate }],  // native tiers only
 //     }]
 //   }
 //
 // Contract decisions pinned below (adjust if you disagree):
 //   - avgPoints averages ONLY non-null actualPoints ("didn't pitch" picks
 //     are excluded, not zeros). avgPoints is null when nothing scored.
+//   - hitRate = scored picks with actualPoints >= threshold (default 15,
+//     compare()'s third arg) / scored picks; null when nothing scored.
+//     Fraction 0..1 — the UI formats it as a percent.
 //   - scored = actualPoints != null; unmatched = scoredAt set but points
 //     null; pending = scoredAt null.
 //   - Buckets are terciles BY RANK ORDER WITHIN each (resource, gameDate)
@@ -62,6 +65,7 @@ describe("StreamingComparisonService", () => {
         unmatched: 0,
         pending: 0,
         avgPoints: null,
+        hitRate: null,
       });
       expect(resource.byBucket).toEqual([]);
       expect(resource.byTier).toEqual([]);
@@ -83,6 +87,7 @@ describe("StreamingComparisonService", () => {
       unmatched: 1,
       pending: 1,
       avgPoints: 15,
+      hitRate: 0.5, // 20 clears the default 15 bar; 10 does not
     });
   });
 
@@ -98,9 +103,9 @@ describe("StreamingComparisonService", () => {
 
     const dw = report.resources.find((r) => r.resource === "dailywaivers")!;
     expect(dw.byBucket).toEqual([
-      { bucket: "high", picks: 2, scored: 2, avgPoints: 27 },
-      { bucket: "mid", picks: 2, scored: 2, avgPoints: 15 },
-      { bucket: "low", picks: 2, scored: 2, avgPoints: 3 },
+      { bucket: "high", picks: 2, scored: 2, avgPoints: 27, hitRate: 1 },
+      { bucket: "mid", picks: 2, scored: 2, avgPoints: 15, hitRate: 0.5 },
+      { bucket: "low", picks: 2, scored: 2, avgPoints: 3, hitRate: 0 },
     ]);
   });
 
@@ -117,9 +122,9 @@ describe("StreamingComparisonService", () => {
 
     const dw = report.resources.find((r) => r.resource === "dailywaivers")!;
     expect(dw.byBucket).toEqual([
-      { bucket: "high", picks: 2, scored: 2, avgPoints: 20 },
-      { bucket: "mid", picks: 1, scored: 1, avgPoints: 15 },
-      { bucket: "low", picks: 1, scored: 1, avgPoints: 0 },
+      { bucket: "high", picks: 2, scored: 2, avgPoints: 20, hitRate: 0.5 },
+      { bucket: "mid", picks: 1, scored: 1, avgPoints: 15, hitRate: 1 },
+      { bucket: "low", picks: 1, scored: 1, avgPoints: 0, hitRate: 0 },
     ]);
   });
 
@@ -132,10 +137,10 @@ describe("StreamingComparisonService", () => {
     const dw = report.resources.find((r) => r.resource === "dailywaivers")!;
     const pl = report.resources.find((r) => r.resource === "pitcherlist")!;
     expect(dw.byBucket).toEqual([
-      { bucket: "high", picks: 1, scored: 1, avgPoints: 20 },
+      { bucket: "high", picks: 1, scored: 1, avgPoints: 20, hitRate: 1 },
     ]);
     expect(pl.byBucket).toEqual([
-      { bucket: "high", picks: 1, scored: 1, avgPoints: 8 },
+      { bucket: "high", picks: 1, scored: 1, avgPoints: 8, hitRate: 0 },
     ]);
   });
 
@@ -149,8 +154,8 @@ describe("StreamingComparisonService", () => {
 
     const pl = report.resources.find((r) => r.resource === "pitcherlist")!;
     expect(pl.byTier).toEqual([
-      { tier: "Auto-Starts", picks: 2, scored: 2, avgPoints: 20 },
-      { tier: "Probably Starts", picks: 1, scored: 1, avgPoints: 5 },
+      { tier: "Auto-Starts", picks: 2, scored: 2, avgPoints: 20, hitRate: 1 },
+      { tier: "Probably Starts", picks: 1, scored: 1, avgPoints: 5, hitRate: 0 },
     ]);
 
     const dw = report.resources.find((r) => r.resource === "dailywaivers")!;
@@ -174,6 +179,24 @@ describe("StreamingComparisonService", () => {
     expect(pl.coverage).toEqual({ successDays: 0, failedDays: 0 });
   });
 
+  it("applies a custom threshold to hit rates", async () => {
+    const repository = makeRepository(
+      [
+        scoredPick({ pitcherName: "A", rank: 1, actualPoints: 12 }),
+        scoredPick({ pitcherName: "B", rank: 2, actualPoints: 9 }),
+      ],
+      []
+    );
+    const report = await new StreamingComparisonService(repository).compare(
+      START,
+      END,
+      10
+    );
+
+    const dw = report.resources.find((r) => r.resource === "dailywaivers")!;
+    expect(dw.overall.hitRate).toBe(0.5); // 12 clears 10; 9 does not
+  });
+
   it("sorts null ranks last within a day's bucket order", async () => {
     const report = await compare([
       scoredPick({ pitcherName: "Ranked", rank: 1, actualPoints: 20 }),
@@ -182,8 +205,8 @@ describe("StreamingComparisonService", () => {
 
     const dw = report.resources.find((r) => r.resource === "dailywaivers")!;
     expect(dw.byBucket).toEqual([
-      { bucket: "high", picks: 1, scored: 1, avgPoints: 20 },
-      { bucket: "mid", picks: 1, scored: 1, avgPoints: 4 },
+      { bucket: "high", picks: 1, scored: 1, avgPoints: 20, hitRate: 1 },
+      { bucket: "mid", picks: 1, scored: 1, avgPoints: 4, hitRate: 0 },
     ]);
   });
 });
