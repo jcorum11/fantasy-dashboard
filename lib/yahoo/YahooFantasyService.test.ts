@@ -28,7 +28,7 @@ function newService() {
     "client-id",
     "client-secret",
     "refresh-token",
-    "431.l.000000"
+    "469.l.154856"
   );
 }
 
@@ -93,7 +93,7 @@ describe("YahooFantasyService", () => {
       await newService().fetchRosteredPlayerNames();
 
       const [url, opts] = fetchMock.mock.calls[1];
-      expect(url).toContain("/league/431.l.000000/players;status=T");
+      expect(url).toContain("/league/469.l.154856/players;status=T");
       expect((opts as RequestInit).headers).toMatchObject({
         Authorization: "Bearer test.access.token",
       });
@@ -168,26 +168,6 @@ describe("YahooFantasyService", () => {
       await expect(
         refreshAccessToken("client-id", "client-secret", "bad-refresh")
       ).rejects.toThrow();
-    });
-
-    it("includes redirect_uri only when YAHOO_REDIRECT_URI is set", async () => {
-      fetchMock.mockResolvedValue(jsonResponse({ access_token: "t" }));
-
-      await refreshAccessToken("client-id", "client-secret", "refresh-token");
-      expect(String(fetchMock.mock.calls[0][1].body)).not.toContain(
-        "redirect_uri"
-      );
-
-      vi.stubEnv(
-        "YAHOO_REDIRECT_URI",
-        "https://example.com/api/auth/yahoo/callback"
-      );
-      await refreshAccessToken("client-id", "client-secret", "refresh-token");
-      expect(String(fetchMock.mock.calls[1][1].body)).toContain(
-        `redirect_uri=${encodeURIComponent(
-          "https://example.com/api/auth/yahoo/callback"
-        )}`
-      );
     });
   });
 });

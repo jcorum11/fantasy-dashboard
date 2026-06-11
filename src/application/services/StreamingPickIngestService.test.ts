@@ -21,7 +21,7 @@ import {
 //
 // Contract decisions pinned below (adjust if you disagree):
 //   - All three clients always run; one failing NEVER blocks the others
-//     (the degradation rule — especially FantasyPros).
+//     (Jacob's degradation rule — especially FantasyPros).
 //   - Successful batches are persisted via repository.saveBatch per resource.
 //   - EVERY run is recorded via repository.recordIngestRun (success AND
 //     failure) so the UI can distinguish "failed" from "no picks".

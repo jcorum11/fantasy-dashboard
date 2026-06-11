@@ -22,7 +22,7 @@ import {
 //     record: { [resource]: { wins, losses } },  // always all three
 //   }
 //
-// Verdict rules (design decision: PURE BUCKETING SKILL, both directions —
+// Verdict rules (Jacob's call: PURE BUCKETING SKILL, both directions —
 // "avoid bombs and pick hits", correct placement outweighs delivery).
 // The CLAIM being graded is the resource's NATIVE one:
 //   - tiered picks (Pitcher List): Auto-Starts/Probably Starts = start

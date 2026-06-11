@@ -1,6 +1,6 @@
 # Fantasy Dashboard
 
-A **Next.js 14 + TypeScript** web app that pulls daily MLB player data and visualizes how each performance translates into fantasy-baseball points. Bring your own league: connect any Yahoo Fantasy league to flag rostered vs. waiver-wire players, and adjust the scoring to match your league's settings.
+A **Next.js 14 + TypeScript** web app that pulls daily MLB player data and visualizes how each performance translates into ESPN fantasy-baseball points. I built it for my own 7-team H2H league, but it can be adapted to other scoring systems.
 
 [Live Demo →](https://fantasy-dashboard-phi.vercel.app)
 
@@ -14,8 +14,7 @@ A **Next.js 14 + TypeScript** web app that pulls daily MLB player data and visua
 | ---- | ---------- |
 | Data Ingestion | Serverless Postgres (Neon) stores raw box-score dumps & computed fantasy points. |
 | Visuals | Recharts-powered line / bar / scatter plots; virtualized lists for 1-day or multi-day views. |
-| Roster Awareness | Connect a Yahoo Fantasy league to distinguish rostered players from waiver-wire pickups. |
-| Pitcher Streaming | Daily streaming-pick ingestion from public resources, scored against actual results. |
+| Roster Filters | Toggle between full MLB slate, my ESPN roster, or custom player watchlists. |
 | Mobile Ready | Tailwind CSS + Headless UI give a responsive, accessible UI out of the box. |
 | Zero-Config Deploy | One-click Vercel deployment with Edge runtime support. |
 
@@ -42,36 +41,14 @@ A **Next.js 14 + TypeScript** web app that pulls daily MLB player data and visua
 git clone https://github.com/jcorum11/fantasy-dashboard.git
 cd fantasy-dashboard && pnpm install
 
-# 2 — Create .env.local and fill in your values
+# 2 — Create .env.local
 cp .env.example .env.local
+# then fill in:
+# DATABASE_URL=postgres://...
+# NEXT_PUBLIC_API_URL=https://site-that-serves/mlb-json
 
-# 3 — Set up the database (idempotent — creates all tables)
+# 3 — Set up the database (creates tables & seed indexes)
 pnpm run migrate
 
 # 4 — Run locally
 pnpm dev
-```
-
-## 🔧 Configuration
-
-All configuration lives in environment variables — see [`.env.example`](.env.example) for the full annotated list.
-
-| Variable | Required | Purpose |
-| -------- | -------- | ------- |
-| `DATABASE_URL` | yes | Postgres connection string (Neon or any Postgres). |
-| `NEXT_PUBLIC_API_URL` | yes | Base URL the frontend uses to reach the API. |
-| `YAHOO_CLIENT_ID` / `YAHOO_CLIENT_SECRET` / `YAHOO_REFRESH_TOKEN` | no | Yahoo Fantasy OAuth credentials — without them, roster flagging is skipped gracefully. |
-| `YAHOO_LEAGUE_KEY` | no | Your league, as `{game_key}.l.{league_id}`. |
-| `YAHOO_REDIRECT_URI` | no | The redirect URI registered with your Yahoo app. |
-
-**Scoring:** point values live in `lib/mlb/points.ts` (`POINTS_SYSTEM`). Edit them there to match your league's scoring settings.
-
-**Never commit secrets** — `.env*` files (except `.env.example`) are gitignored.
-
----
-
-## ☕ Support
-
-If this dashboard saves you some roster-tinkering time, consider buying me a coffee:
-
-[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-%E2%98%95-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/jcorum)

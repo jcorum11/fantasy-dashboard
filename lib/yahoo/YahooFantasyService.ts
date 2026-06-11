@@ -1,5 +1,7 @@
 const TOKEN_URL = "https://api.login.yahoo.com/oauth2/get_token";
 const API_BASE = "https://fantasysports.yahooapis.com/fantasy/v2";
+const REDIRECT_URI =
+  "https://fantasy-dashboard-phi.vercel.app/api/auth/yahoo/callback";
 const PAGE_SIZE = 25; // Yahoo returns at most 25 players per page
 
 /**
@@ -12,21 +14,17 @@ export async function refreshAccessToken(
   refreshToken: string
 ): Promise<string> {
   const basic = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
-  const params = new URLSearchParams({
-    grant_type: "refresh_token",
-    refresh_token: refreshToken,
-  });
-  // Yahoo expects the redirect_uri registered with the app; deployments set
-  // YAHOO_REDIRECT_URI to their own callback URL.
-  const redirectUri = process.env.YAHOO_REDIRECT_URI;
-  if (redirectUri) params.set("redirect_uri", redirectUri);
   const res = await fetch(TOKEN_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
       Authorization: `Basic ${basic}`,
     },
-    body: params,
+    body: new URLSearchParams({
+      grant_type: "refresh_token",
+      redirect_uri: REDIRECT_URI,
+      refresh_token: refreshToken,
+    }),
   });
 
   if (!res.ok) {
