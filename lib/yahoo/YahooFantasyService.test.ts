@@ -169,5 +169,25 @@ describe("YahooFantasyService", () => {
         refreshAccessToken("client-id", "client-secret", "bad-refresh")
       ).rejects.toThrow();
     });
+
+    it("includes redirect_uri only when YAHOO_REDIRECT_URI is set", async () => {
+      fetchMock.mockResolvedValue(jsonResponse({ access_token: "t" }));
+
+      await refreshAccessToken("client-id", "client-secret", "refresh-token");
+      expect(String(fetchMock.mock.calls[0][1].body)).not.toContain(
+        "redirect_uri"
+      );
+
+      vi.stubEnv(
+        "YAHOO_REDIRECT_URI",
+        "https://example.com/api/auth/yahoo/callback"
+      );
+      await refreshAccessToken("client-id", "client-secret", "refresh-token");
+      expect(String(fetchMock.mock.calls[1][1].body)).toContain(
+        `redirect_uri=${encodeURIComponent(
+          "https://example.com/api/auth/yahoo/callback"
+        )}`
+      );
+    });
   });
 });
