@@ -5,7 +5,7 @@ import { makeReport } from "@/src/presentation/streaming/ComparisonGrid.mocks";
 
 // Proposed contract:
 //   <ResourceHealth resources={report.resources} />
-//   One status chip per resource (Jacob's degradation rule — failures are
+//   One status chip per resource (per the degradation rule — failures are
 //   explicit, never silently absent):
 //     - failedDays > 0  -> role="status" warning naming the resource and
 //                          the failed-day count

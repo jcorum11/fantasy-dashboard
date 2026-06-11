@@ -5,13 +5,13 @@
 export const ROSTER_PAGE = {
   fantasy_content: {
     league: [
-      { league_key: "469.l.154856", name: "Sons of Pitches" },
+      { league_key: "431.l.000000", name: "Example League" },
       {
         players: {
           "0": {
             player: [
               [
-                { player_key: "469.p.8193" },
+                { player_key: "431.p.8193" },
                 { player_id: "8193" },
                 {
                   name: {
@@ -29,7 +29,7 @@ export const ROSTER_PAGE = {
           "1": {
             player: [
               [
-                { player_key: "469.p.8616" },
+                { player_key: "431.p.8616" },
                 { player_id: "8616" },
                 {
                   name: {
@@ -66,12 +66,12 @@ export function makeRosterPage(fullNames: string[]) {
   const players: Record<string, unknown> = { count: fullNames.length };
   fullNames.forEach((full, i) => {
     players[String(i)] = {
-      player: [[{ player_key: `469.p.${i}` }, { name: { full } }]],
+      player: [[{ player_key: `431.p.${i}` }, { name: { full } }]],
     };
   });
   return {
     fantasy_content: {
-      league: [{ league_key: "469.l.154856" }, { players }],
+      league: [{ league_key: "431.l.000000" }, { players }],
     },
   };
 }
@@ -80,14 +80,14 @@ export function makeRosterPage(fullNames: string[]) {
 export const MALFORMED_ROSTER_PAGE = {
   fantasy_content: {
     league: [
-      { league_key: "469.l.154856" },
+      { league_key: "431.l.000000" },
       {
         players: {
           "0": {
-            player: [[{ player_key: "469.p.1" }, { name: { full: "Real Player" } }]],
+            player: [[{ player_key: "431.p.1" }, { name: { full: "Real Player" } }]],
           },
           "1": {
-            player: [[{ player_key: "469.p.2" }, { editorial_team_abbr: "NYY" }]],
+            player: [[{ player_key: "431.p.2" }, { editorial_team_abbr: "NYY" }]],
           },
           count: 2,
         },

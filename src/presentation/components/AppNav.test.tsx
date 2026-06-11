@@ -9,6 +9,8 @@ import { AppNav } from "@/src/presentation/components/AppNav";
 //          Pitcher Streaming (/pitcher-streaming).
 //   The link matching usePathname() carries aria-current="page" — accessible
 //   AND testable without coupling to Tailwind classes.
+//   Plus one external support link (Buy me a coffee) that opens in a new tab
+//   and never carries aria-current.
 
 const usePathname = vi.fn();
 vi.mock("next/navigation", () => ({
@@ -51,6 +53,16 @@ describe("AppNav", () => {
     expect(
       screen.getByRole("link", { name: "Daily Stats" })
     ).not.toHaveAttribute("aria-current");
+  });
+
+  it("renders the support link as an external new-tab link", () => {
+    render(<AppNav />);
+
+    const link = screen.getByRole("link", { name: /buy me a coffee/i });
+    expect(link).toHaveAttribute("href", "https://buymeacoffee.com/jcorum");
+    expect(link).toHaveAttribute("target", "_blank");
+    expect(link).toHaveAttribute("rel", expect.stringContaining("noopener"));
+    expect(link).not.toHaveAttribute("aria-current");
   });
 
   it("marks Daily Stats current only on the exact root path", () => {
