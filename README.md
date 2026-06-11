@@ -67,3 +67,11 @@ All configuration lives in environment variables — see [`.env.example`](.env.e
 **Scoring:** point values live in `lib/mlb/points.ts` (`POINTS_SYSTEM`). Edit them there to match your league's scoring settings.
 
 **Never commit secrets** — `.env*` files (except `.env.example`) are gitignored.
+
+---
+
+## ☕ Support
+
+If this dashboard saves you some roster-tinkering time, consider buying me a coffee:
+
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-%E2%98%95-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/jcorum)
