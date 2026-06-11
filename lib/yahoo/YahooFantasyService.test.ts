@@ -28,7 +28,7 @@ function newService() {
     "client-id",
     "client-secret",
     "refresh-token",
-    "469.l.154856"
+    "431.l.000000"
   );
 }
 
@@ -93,7 +93,7 @@ describe("YahooFantasyService", () => {
       await newService().fetchRosteredPlayerNames();
 
       const [url, opts] = fetchMock.mock.calls[1];
-      expect(url).toContain("/league/469.l.154856/players;status=T");
+      expect(url).toContain("/league/431.l.000000/players;status=T");
       expect((opts as RequestInit).headers).toMatchObject({
         Authorization: "Bearer test.access.token",
       });
