@@ -7,11 +7,22 @@ import { PitchingStats } from "../../domain/models/PitchingStats";
 import { IPlayerStatsRepository } from "../../domain/repositories/IPlayerStatsRepository";
 import { PostgresPlayerStatsRepository } from "../../infrastructure/repositories/PostgresPlayerStatsRepository";
 
+export interface PersistSummary {
+  gameDate: string;
+  persisted: number;
+}
+
 export class PlayerStatsService {
   private repository: IPlayerStatsRepository | null = null;
 
-  constructor(private readonly mlbClient: IMLBClient, databaseUrl?: string) {
-    if (databaseUrl) {
+  constructor(
+    private readonly mlbClient: IMLBClient,
+    databaseUrl?: string,
+    repository?: IPlayerStatsRepository
+  ) {
+    if (repository) {
+      this.repository = repository;
+    } else if (databaseUrl) {
       this.repository = new PostgresPlayerStatsRepository(databaseUrl);
     }
   }
@@ -67,6 +78,29 @@ export class PlayerStatsService {
     }
 
     return allPlayerStats;
+  }
+
+  /**
+   * Fetch a date's stats from the MLB API and replace that date's rows in
+   * the database. Idempotent — re-running a date never duplicates rows. An
+   * empty fetch deletes nothing, so a transient empty API response can't
+   * wipe previously persisted data.
+   */
+  async persistStatsForDate(date: string | Date): Promise<PersistSummary> {
+    if (!this.repository) {
+      throw new Error("Database URL not provided");
+    }
+    const dateStr =
+      typeof date === "string" ? date : date.toISOString().split("T")[0];
+    const dateObj = typeof date === "string" ? new Date(`${date}T00:00:00Z`) : date;
+
+    const stats = await this.getPlayerStatsByDate(dateStr);
+    if (stats.length > 0) {
+      await this.repository.deleteByDate(dateObj);
+      await this.repository.saveBatch(stats);
+    }
+
+    return { gameDate: dateStr, persisted: stats.length };
   }
 
   /**

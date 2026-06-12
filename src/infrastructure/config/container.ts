@@ -7,6 +7,8 @@ import { StreamingComparisonService } from "../../application/services/Streaming
 import { DailyBreakdownService } from "../../application/services/DailyBreakdownService";
 import { IStreamingPickRepository } from "../../domain/repositories/IStreamingPickRepository";
 import { PostgresStreamingPickRepository } from "../repositories/PostgresStreamingPickRepository";
+import { IPlayerStatsRepository } from "../../domain/repositories/IPlayerStatsRepository";
+import { PostgresPlayerStatsRepository } from "../repositories/PostgresPlayerStatsRepository";
 import { DailyWaiversClient } from "../streaming/DailyWaiversClient";
 import { FantasyProsClient } from "../streaming/FantasyProsClient";
 import { PitcherListClient } from "../streaming/PitcherListClient";
@@ -14,6 +16,7 @@ import { PitcherListClient } from "../streaming/PitcherListClient";
 export class Container {
   private static instance: Container;
   private mlbClient: IMLBClient | null = null;
+  private playerStatsRepository: IPlayerStatsRepository | null = null;
   private playerStatsService: PlayerStatsService | null = null;
   private streamingPickRepository: IStreamingPickRepository | null = null;
   private streamingPickIngestService: StreamingPickIngestService | null = null;
@@ -33,9 +36,13 @@ export class Container {
 
   public initialize(databaseUrl: string): void {
     this.mlbClient = new MLBClient();
+    this.playerStatsRepository = new PostgresPlayerStatsRepository(
+      databaseUrl
+    );
     this.playerStatsService = new PlayerStatsService(
       this.mlbClient,
-      databaseUrl
+      databaseUrl,
+      this.playerStatsRepository
     );
     this.streamingPickRepository = new PostgresStreamingPickRepository(
       databaseUrl
@@ -65,6 +72,13 @@ export class Container {
       throw new Error("Container not initialized");
     }
     return this.mlbClient;
+  }
+
+  public getPlayerStatsRepository(): IPlayerStatsRepository {
+    if (!this.playerStatsRepository) {
+      throw new Error("Container not initialized");
+    }
+    return this.playerStatsRepository;
   }
 
   public getPlayerStatsService(): PlayerStatsService {

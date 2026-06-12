@@ -46,11 +46,24 @@ export async function GET(request: NextRequest) {
       scoring = { error: error?.message || "Unknown error" };
     }
 
+    // Persist yesterday's player box-score stats — the breakout-hitters
+    // page reads daily points from player_stats, so this keeps the season
+    // series current. Best-effort, same as scoring.
+    let playerStats = null;
+    try {
+      playerStats = await container
+        .getPlayerStatsService()
+        .persistStatsForDate(yesterday);
+    } catch (error: any) {
+      console.error("Error persisting yesterday's player stats:", error);
+      playerStats = { error: error?.message || "Unknown error" };
+    }
+
     // Partial failure is a report, not an error — the surviving resources'
     // picks are persisted and the failures are visible per-resource.
     const allFailed = summary.results.every((r) => r.status === "failure");
     return NextResponse.json(
-      { pickDate: today, ...summary, scoring },
+      { pickDate: today, ...summary, scoring, playerStats },
       { status: allFailed ? 500 : 200 }
     );
   } catch (error: any) {

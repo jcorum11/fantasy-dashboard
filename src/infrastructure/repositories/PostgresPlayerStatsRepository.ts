@@ -138,6 +138,38 @@ export class PostgresPlayerStatsRepository implements IPlayerStatsRepository {
     }
   }
 
+  async deleteByDate(date: Date): Promise<void> {
+    try {
+      await this.sql`
+        DELETE FROM player_stats
+        WHERE game_date = ${date.toISOString().split("T")[0]}::date
+      `;
+    } catch (error: any) {
+      throw new Error(
+        `Failed to delete player stats by date: ${
+          error?.message || "Unknown error"
+        }`
+      );
+    }
+  }
+
+  async getDatesWithData(startDate: Date, endDate: Date): Promise<string[]> {
+    try {
+      const result = await this.sql`
+        SELECT DISTINCT game_date::text AS game_date
+        FROM player_stats
+        WHERE game_date BETWEEN ${startDate.toISOString().split("T")[0]}::date
+          AND ${endDate.toISOString().split("T")[0]}::date
+        ORDER BY game_date
+      `;
+      return result.map((row: any) => row.game_date);
+    } catch (error: any) {
+      throw new Error(
+        `Failed to get dates with data: ${error?.message || "Unknown error"}`
+      );
+    }
+  }
+
   async save(stats: PlayerStats): Promise<void> {
     try {
       await this.sql`
