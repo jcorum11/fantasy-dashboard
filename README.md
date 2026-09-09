@@ -52,3 +52,27 @@ pnpm run migrate
 
 # 4 — Run locally
 pnpm dev
+
+---
+
+## 🕰 Previous incarnation (fantasy tools)
+
+Before becoming a player points explorer, this repo was a set of fantasy tools
+(pitcher streaming comparison, weekly points, replacement level, Neon-backed
+daily ingest). That version is preserved in git history:
+
+| | |
+| --- | --- |
+| Last commit | `8018a54` |
+| Tag | `v1-fantasy-tools` |
+
+```bash
+# Browse the old app
+git checkout v1-fantasy-tools
+
+# Restore a single file from it
+git checkout v1-fantasy-tools -- path/to/file
+
+# Bring the whole old app back on a new branch
+git checkout -b restore-fantasy-tools v1-fantasy-tools
+```
