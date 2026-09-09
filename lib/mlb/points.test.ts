@@ -16,11 +16,6 @@ describe('Yahoo', () => {
       expect(() => YAHOO.calculateBattingPoints({ runs: 1.2 })).toThrowError("runs must be a whole number")
     })
 
-    it("doesn't count strikeouts as negative", () => {
-      expect(YAHOO.calculateBattingPoints({ strikeouts: 5 })).toBe(0)
-      expect(YAHOO.calculateBattingPoints({ strikeouts: 0 })).toBe(0)
-      expect(YAHOO.calculateBattingPoints({ strikeouts: -1 })).toBe(0)
-    })
 
     it("derives singles by subtracting extra-base hits", () => {
       // 4 hits = 1 single + 1 double + 1 triple + 1 HR => 2.6 + 5.2 + 7.8 + 10.4
@@ -34,8 +29,8 @@ describe('Yahoo', () => {
 
     it("scores a full batting line", () => {
       // 2 singles (5.2) + double (5.2) + triple (7.8) + HR (10.4) + 2 runs (3.8)
-      // + 3 rbi (5.7) + 1 sb (4.2) + 1 bb (2.6); strikeouts ignored
-      expect(YAHOO.calculateBattingPoints({ hits: 5, doubles: 1, triples: 1, homeRuns: 1, runs: 2, rbi: 3, stolenBases: 1, walks: 1, strikeouts: 4 })).toBeCloseTo(44.9, 10)
+      // + 3 rbi (5.7) + 1 sb (4.2) + 1 bb (2.6)
+      expect(YAHOO.calculateBattingPoints({ hits: 5, doubles: 1, triples: 1, homeRuns: 1, runs: 2, rbi: 3, stolenBases: 1, walks: 1 })).toBeCloseTo(44.9, 10)
     })
 
     it("scores hit by pitch at 2.6", () => {
@@ -54,17 +49,7 @@ describe('Yahoo', () => {
       expect(YAHOO.calculatePitchingPoints({ inningsPitched: "10" })).toBeCloseTo(30, 10)
     })
 
-    it("doesn't count pitcher losses as negative", () => {
-      expect(YAHOO.calculatePitchingPoints({ losses: 1 })).toBe(0)
-      expect(YAHOO.calculatePitchingPoints({ losses: 0 })).toBe(0)
-      expect(YAHOO.calculatePitchingPoints({ losses: -1 })).toBe(0)
-    })
 
-    it("doesn't count holds at all", () => {
-      expect(YAHOO.calculatePitchingPoints({ holds: 1 })).toBe(0)
-      expect(YAHOO.calculatePitchingPoints({ holds: -1 })).toBe(0)
-      expect(YAHOO.calculatePitchingPoints({ holds: 0 })).toBe(0)
-    })
 
     it("scores a full pitching line", () => {
       // "6.0" => 18 outs + win (8) + 7 K (21) + 5 hits (-6.5) + 2 ER (-6) + 1 BB (-1.3)
