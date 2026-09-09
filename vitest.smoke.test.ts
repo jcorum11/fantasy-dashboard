@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 // Importing through the "@/*" alias proves tsconfig path resolution works under Vitest.
-import { ESPN } from "@/lib/mlb/points";
+import { YAHOO } from "@/lib/mlb/points";
 
 describe("vitest harness", () => {
   it("runs tests", () => {
@@ -8,6 +8,6 @@ describe("vitest harness", () => {
   });
 
   it("resolves the @/* path alias", () => {
-    expect(ESPN.POINTS_SYSTEM.totalBases).toBe(1);
+    expect(YAHOO.POINTS_SYSTEM.homeRuns).toBe(10.4);
   });
 });

@@ -4,10 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const PAGES: { href: string; label: string }[] = [
-  { href: "/", label: "Daily Stats" },
-  { href: "/weekly-points", label: "Weekly Points" },
-  { href: "/replacement-level", label: "Replacement Level" },
-  { href: "/pitcher-streaming", label: "Pitcher Streaming" },
+  { href: "/", label: "Players" },
 ];
 
 export function AppNav() {

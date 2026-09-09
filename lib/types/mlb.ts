@@ -1,7 +1,10 @@
-// MLB API Types
+/**
+ * A single stat line (one game, one week, or a whole season) in the shape the
+ * scoring system consumes. Batting and pitching fields may both be present for
+ * two-way players. Innings use MLB's "6.2" notation (6 innings + 2 outs).
+ */
 export interface MLBStats {
-  // Batting stats
-  atBats?: number;
+  // Batting
   hits?: number;
   doubles?: number;
   triples?: number;
@@ -10,216 +13,15 @@ export interface MLBStats {
   runs?: number;
   stolenBases?: number;
   walks?: number;
-  strikeouts?: number;
-  hitByPitch?: number; // API: stats.batting.hitByPitch
+  hitByPitch?: number;
 
-  // Pitching stats
+  // Pitching
   inningsPitched?: string;
   earnedRuns?: number;
   wins?: number;
-  losses?: number;
   saves?: number;
   pitchingStrikeouts?: number;
   hitsAllowed?: number;
   walksIssued?: number;
-  holds?: number;
-  hitBatters?: number; // API: stats.pitching.hitBatsmen
-  gamesStarted?: number;
-}
-
-export interface MLBPlayer {
-  person: {
-    id: number;
-    fullName: string;
-  };
-  position: {
-    abbreviation: string;
-  };
-  stats: {
-    batting: {
-      gamesPlayed?: number;
-      atBats?: number;
-      hits?: number;
-      doubles?: number;
-      triples?: number;
-      homeRuns?: number;
-      rbi?: number;
-      runs?: number;
-      stolenBases?: number;
-      baseOnBalls?: number;
-      strikeOuts?: number;
-    };
-    pitching: {
-      gamesPlayed?: number;
-      inningsPitched?: string;
-      earnedRuns?: number;
-      wins?: number;
-      losses?: number;
-      saves?: number;
-      strikeOuts?: number;
-      hits?: number;
-      baseOnBalls?: number;
-      holds?: number;
-    };
-  };
-}
-
-export interface MLBTeam {
-  leagueRecord: {
-    wins: number;
-    losses: number;
-    pct: string;
-  };
-  score: number;
-  team: {
-    id: number;
-    name: string;
-    link: string;
-  };
-  isWinner: boolean;
-  splitSquad: boolean;
-  seriesNumber: number;
-}
-
-export interface MLBBoxScore {
-  teams: {
-    away: MLBTeamBoxScore;
-    home: MLBTeamBoxScore;
-  };
-}
-
-export interface MLBTeamBoxScore {
-  team: {
-    id: number;
-    name: string;
-    link: string;
-    abbreviation: string;
-  };
-  players: {
-    [key: string]: MLBPlayerBoxScore;
-  };
-}
-
-export interface MLBPlayerBoxScore {
-  person: {
-    id: number;
-    fullName: string;
-    link: string;
-  };
-  position: {
-    code: string;
-    name: string;
-    type: string;
-    abbreviation: string;
-  };
-  stats?: {
-    batting?: {
-      gamesPlayed?: number;
-      atBats?: number;
-      hits?: number;
-      doubles?: number;
-      triples?: number;
-      homeRuns?: number;
-      rbi?: number;
-      runs?: number;
-      baseOnBalls?: number;
-      strikeOuts?: number;
-      stolenBases?: number;
-    };
-    pitching?: {
-      gamesPlayed?: number;
-      inningsPitched?: string;
-      hits?: number;
-      runs?: number;
-      earnedRuns?: number;
-      baseOnBalls?: number;
-      strikeOuts?: number;
-      homeRuns?: number;
-      wins?: number;
-      losses?: number;
-      saves?: number;
-      holds?: number;
-      gamesStarted?: number;
-    };
-  };
-}
-
-export interface MLBScheduleResponse {
-  copyright?: string;
-  totalGames?: number;
-  dates: Array<{
-    date: string;
-    totalGames: number;
-    games: Array<{
-      gamePk: number;
-      gameType: string;
-      season: string;
-      gameDate: string;
-      status: {
-        abstractGameState: string;
-        codedGameState: string;
-        detailedState: string;
-        statusCode: string;
-        startTimeTBD: boolean;
-      };
-      teams: {
-        away: {
-          leagueRecord: {
-            wins: number;
-            losses: number;
-            pct: string;
-          };
-          score: number;
-          team: {
-            id: number;
-            name: string;
-            link: string;
-          };
-          isWinner: boolean;
-          splitSquad: boolean;
-          seriesNumber: number;
-        };
-        home: {
-          leagueRecord: {
-            wins: number;
-            losses: number;
-            pct: string;
-          };
-          score: number;
-          team: {
-            id: number;
-            name: string;
-            link: string;
-          };
-          isWinner: boolean;
-          splitSquad: boolean;
-          seriesNumber: number;
-        };
-      };
-      venue: {
-        id: number;
-        name: string;
-        link: string;
-      };
-      content: {
-        link: string;
-      };
-      isTie: boolean;
-      gameNumber: number;
-      publicFacing: boolean;
-      doubleHeader: string;
-      gamedayType: string;
-      tiebreaker: string;
-      calendarEventID: string;
-      seasonDisplay: string;
-      dayNight: string;
-      scheduledInnings: number;
-      gamesInSeries: number;
-      seriesGameNumber: number;
-      seriesDescription: string;
-      recordSource: string;
-      ifNecessary: string;
-      ifNecessaryDescription: string;
-    }>;
-  }>;
+  hitBatters?: number;
 }
