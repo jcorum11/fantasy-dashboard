@@ -1,10 +1,13 @@
-# Fantasy Dashboard
+# Player Points Explorer
 
-A **Next.js 14 + TypeScript** web app that pulls daily MLB player data and visualizes how each performance translates into ESPN fantasy-baseball points. I built it for my own 7-team H2H league, but it can be adapted to other scoring systems.
+A **Next.js 14 + TypeScript** app for seeing how MLB players' fantasy points are
+distributed across a season. The home page ranks every player with a
+regular-season appearance by total Yahoo points, with search. A player's page
+shows their week-by-week points for the current season, and a button for every
+season of their career.
 
-[Live Demo →](https://fantasy-dashboard-phi.vercel.app)
-
-[Video Demo →](https://www.loom.com/share/06fd3adc246d4eaa8d0170f01e1268d7)
+All data comes live from the public [MLB Stats API](https://statsapi.mlb.com):
+no database, no cron, no API keys.
 
 ---
 
@@ -12,11 +15,11 @@ A **Next.js 14 + TypeScript** web app that pulls daily MLB player data and visua
 
 | Area | Highlights |
 | ---- | ---------- |
-| Data Ingestion | Serverless Postgres (Neon) stores raw box-score dumps & computed fantasy points. |
-| Visuals | Recharts-powered line / bar / scatter plots; virtualized lists for 1-day or multi-day views. |
-| Roster Filters | Toggle between full MLB slate, my ESPN roster, or custom player watchlists. |
-| Mobile Ready | Tailwind CSS + Headless UI give a responsive, accessible UI out of the box. |
-| Zero-Config Deploy | One-click Vercel deployment with Edge runtime support. |
+| Player list | Every player with a regular-season stat line, ranked by Yahoo points. Search by name, team, or position. |
+| Player page | Monday–Sunday weekly points bar chart, total / average / best week, a table view, and one button per career season. |
+| Scoring | Yahoo default H2H points scoring (see `lib/mlb/points.ts`). Two-way players get hitting and pitching combined. |
+| Data | Fetched from the MLB Stats API on demand and cached with Next's fetch cache: finished seasons for a week, the current season for an hour. |
+| Deploy | Zero-config Vercel deployment. |
 
 ---
 
@@ -26,32 +29,58 @@ A **Next.js 14 + TypeScript** web app that pulls daily MLB player data and visua
 | ----- | ----------------- |
 | Framework | Next.js 14 `app/` router |
 | Language | TypeScript 5 |
-| Styling | Tailwind CSS 3, Headless UI components |
+| Styling | Tailwind CSS 3 |
 | Charts | [Recharts](https://recharts.org) |
-| DB | Neon serverless Postgres |
-| State / Data | React 18 Context + SWR-style fetchers |
-| Tooling | ESLint 8, Prettier, pnpm |
+| Data | MLB Stats API via `fetch` |
+| Tests | Vitest + Testing Library |
+| Tooling | ESLint, pnpm |
 
 ---
 
 ## ⚡ Quick Start
 
 ```bash
-# 1 — Clone and install deps
 git clone https://github.com/jcorum11/fantasy-dashboard.git
 cd fantasy-dashboard && pnpm install
-
-# 2 — Create .env.local
-cp .env.example .env.local
-# then fill in:
-# DATABASE_URL=postgres://...
-# NEXT_PUBLIC_API_URL=https://site-that-serves/mlb-json
-
-# 3 — Set up the database (creates tables & seed indexes)
-pnpm run migrate
-
-# 4 — Run locally
 pnpm dev
+```
+
+No environment variables are required.
+
+```bash
+pnpm test         # unit + component tests
+pnpm lint
+pnpm build
+```
+
+---
+
+## 🧭 Layout
+
+```
+app/                      Next.js routes (home, /players/[id], /api/players/...)
+lib/mlb/points.ts         Yahoo scoring
+src/domain/               Models and the IMLBClient interface
+src/application/          PlayerPointsService, week bucketing
+src/infrastructure/mlb/   MLBClient (Stats API gateway) and stat mappers
+src/presentation/         React components and API param helpers
+```
+
+### API
+
+| Route | Returns |
+| ----- | ------- |
+| `GET /api/players[?season=YYYY]` | Ranked player list for the current (or given) season |
+| `GET /api/players/:id/seasons` | Seasons the player has regular-season stats in |
+| `GET /api/players/:id/seasons/:year` | Weekly points for one regular season |
+
+---
+
+## ☕ Support
+
+If this saves you some roster-tinkering time, consider buying me a coffee:
+
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-%E2%98%95-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/jcorum)
 
 ---
 

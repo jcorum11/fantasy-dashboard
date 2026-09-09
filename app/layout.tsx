@@ -7,8 +7,9 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "MLB Player Stats Dashboard",
-  description: "View MLB player statistics and fantasy points",
+  title: "Player Points Explorer",
+  description:
+    "Week-by-week Yahoo fantasy points for every MLB player, this season and every past one.",
 };
 
 export default function RootLayout({

@@ -30,6 +30,14 @@ export function AppNav() {
             </Link>
           );
         })}
+        <a
+          href="https://buymeacoffee.com/jcorum"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="ml-auto px-3 py-1 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100"
+        >
+          ☕ Buy me a coffee
+        </a>
       </div>
     </nav>
   );

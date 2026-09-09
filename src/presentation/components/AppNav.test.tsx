@@ -25,6 +25,15 @@ describe("AppNav", () => {
     );
   });
 
+  it("links out to buy-me-a-coffee in a new tab", () => {
+    render(<AppNav />);
+
+    const link = screen.getByRole("link", { name: /Buy me a coffee/ });
+    expect(link).toHaveAttribute("href", "https://buymeacoffee.com/jcorum");
+    expect(link).toHaveAttribute("target", "_blank");
+    expect(link).toHaveAttribute("rel", expect.stringContaining("noopener"));
+  });
+
   it("marks Players current only on the exact root path", () => {
     usePathname.mockReturnValue("/players/123");
     render(<AppNav />);
