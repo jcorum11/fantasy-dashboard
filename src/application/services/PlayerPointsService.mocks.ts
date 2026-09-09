@@ -5,6 +5,7 @@ import {
   SeasonStatLine,
   StatGroup,
 } from "@/src/domain/interfaces/IMLBClient";
+import { PlayerProfile } from "@/src/domain/models/PlayerProfile";
 
 /** In-memory IMLBClient seeded with whatever a test needs. */
 export class FakeMLBClient implements IMLBClient {
@@ -12,7 +13,11 @@ export class FakeMLBClient implements IMLBClient {
   gameLogs: Record<string, GameLogEntry[]> = {};
   seasonsPlayed: Record<number, number[]> = {};
   seasonDates: Record<number, RegularSeasonDates> = {};
+  players: Record<number, PlayerProfile> = {};
 
+  async getPlayer(playerId: number) {
+    return this.players[playerId] ?? null;
+  }
   async getSeasonStatLines(season: number, group: StatGroup) {
     return this.seasonLines[`${season}:${group}`] ?? [];
   }

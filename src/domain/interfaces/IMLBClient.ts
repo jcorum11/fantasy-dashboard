@@ -1,4 +1,5 @@
 import { MLBStats } from "@/lib/types/mlb";
+import { PlayerProfile } from "@/src/domain/models/PlayerProfile";
 
 export type StatGroup = "hitting" | "pitching";
 
@@ -31,6 +32,9 @@ export interface RegularSeasonDates {
 
 /** Read-only gateway to the MLB Stats API. Regular-season data only. */
 export interface IMLBClient {
+  /** Basic profile for a player, or null if the id is unknown. */
+  getPlayer(playerId: number): Promise<PlayerProfile | null>;
+
   /** Every player with a regular-season stat line in `group` for `season`. */
   getSeasonStatLines(season: number, group: StatGroup): Promise<SeasonStatLine[]>;
 

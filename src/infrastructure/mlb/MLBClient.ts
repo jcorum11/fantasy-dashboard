@@ -5,6 +5,7 @@ import {
   SeasonStatLine,
   StatGroup,
 } from "@/src/domain/interfaces/IMLBClient";
+import { PlayerProfile } from "@/src/domain/models/PlayerProfile";
 import { mapStat, RawStat } from "./statMappers";
 
 const HOUR = 60 * 60;
@@ -24,6 +25,16 @@ interface RawStatsResponse {
   stats?: Array<{ group?: { displayName: string }; splits?: RawSplit[] }>;
 }
 
+interface RawPeopleResponse {
+  people?: Array<{
+    id: number;
+    fullName: string;
+    active?: boolean;
+    primaryPosition?: { abbreviation: string };
+    currentTeam?: { name: string };
+  }>;
+}
+
 interface RawSeasonsResponse {
   seasons?: Array<{
     seasonId: string;
@@ -40,6 +51,27 @@ export class MLBClient implements IMLBClient {
   private readonly baseUrl = "https://statsapi.mlb.com/api/v1";
 
   constructor(private readonly now: () => Date = () => new Date()) {}
+
+  async getPlayer(playerId: number): Promise<PlayerProfile | null> {
+    const response = await fetch(
+      `${this.baseUrl}/people/${playerId}?hydrate=currentTeam`,
+      { next: { revalidate: 24 * HOUR } }
+    );
+    if (response.status === 404) return null;
+    if (!response.ok) {
+      throw new Error(`MLB API ${response.status} ${response.statusText} for /people/${playerId}`);
+    }
+    const data = (await response.json()) as RawPeopleResponse;
+    const p = data.people?.[0];
+    if (!p) return null;
+    return {
+      id: p.id,
+      name: p.fullName,
+      position: p.primaryPosition?.abbreviation ?? "—",
+      team: p.currentTeam?.name ?? null,
+      active: p.active ?? false,
+    };
+  }
 
   async getSeasonStatLines(
     season: number,

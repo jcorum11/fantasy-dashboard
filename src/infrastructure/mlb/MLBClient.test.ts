@@ -18,6 +18,33 @@ const client = new MLBClient(() => new Date("2026-06-15T00:00:00Z"));
 afterEach(() => fetchMock.mockReset());
 
 describe("MLBClient", () => {
+  it("maps a player profile with the hydrated team, and null for unknown ids", async () => {
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse({
+        people: [
+          {
+            id: 660271,
+            fullName: "Shohei Ohtani",
+            active: true,
+            primaryPosition: { abbreviation: "TWP" },
+            currentTeam: { name: "Los Angeles Dodgers" },
+          },
+        ],
+      })
+    );
+    expect(await client.getPlayer(660271)).toEqual({
+      id: 660271,
+      name: "Shohei Ohtani",
+      position: "TWP",
+      team: "Los Angeles Dodgers",
+      active: true,
+    });
+    expect(fetchMock.mock.calls[0][0]).toContain("/people/660271?hydrate=currentTeam");
+
+    fetchMock.mockResolvedValueOnce(jsonResponse({ message: "Object not found" }, false, 404));
+    expect(await client.getPlayer(1)).toBeNull();
+  });
+
   it("maps season stat lines and requests regular-season, all-player totals", async () => {
     fetchMock.mockResolvedValue(
       jsonResponse({

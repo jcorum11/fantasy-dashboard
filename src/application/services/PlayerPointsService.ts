@@ -5,6 +5,7 @@ import {
   SeasonStatLine,
   StatGroup,
 } from "@/src/domain/interfaces/IMLBClient";
+import { PlayerProfile } from "@/src/domain/models/PlayerProfile";
 import { PlayerSummary } from "@/src/domain/models/PlayerSummary";
 import { SeasonWeeklyPoints, WeeklyPoints } from "@/src/domain/models/WeeklyPoints";
 import { seasonWeeks, weekIndexFor } from "./weeks";
@@ -70,6 +71,10 @@ export class PlayerPointsService {
     return [...byId.values()]
       .map((p) => ({ ...p, points: round(p.points) }))
       .sort((a, b) => b.points - a.points || a.name.localeCompare(b.name));
+  }
+
+  async getPlayer(playerId: number): Promise<PlayerProfile | null> {
+    return this.mlb.getPlayer(playerId);
   }
 
   async getSeasonsPlayed(playerId: number): Promise<number[]> {
